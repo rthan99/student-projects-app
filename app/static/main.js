@@ -60,33 +60,17 @@ function renderGrid(rows) {
     card.className = 'card';
     const imgSrc = row.thumbnail_image ? `/uploads/images/${encodeURIComponent(row.thumbnail_image)}` : null;
     const hasVideoOnly = !imgSrc && row.video_count > 0;
-    let mediaHtml = '';
-    if (imgSrc) {
-      mediaHtml = `<div class="card-image" style="background-image:url('${imgSrc}')" data-id="${row.id}"></div>`;
-    } else if (hasVideoOnly) {
-      mediaHtml = `
-        <div class="card-image" data-id="${row.id}">
-          <video class="card-video" preload="metadata" muted playsinline>
-            <source src="/uploads/videos/${encodeURIComponent(row.thumbnail_video || '')}" />
-          </video>
-          <div class="card-video-overlay">
-            <div class="card-play-icon"></div>
-          </div>
-          <div class="video-badge">▶</div>
-        </div>`;
-    } else {
-      mediaHtml = `<div class="card-image" data-id="${row.id}"><div class="no-thumb">No Media</div></div>`;
-    }
-    // Generate star rating HTML
-    const rating = row.rating || 0;
-    const starsHtml = Array.from({length: 3}, (_, i) => 
-      `<span class="star ${i < rating ? 'active' : ''}">★</span>`
-    ).join('');
     
-    // Add rating to the media HTML
+    // Generate star rating HTML - only show if rating > 0
+    const rating = row.rating || 0;
+    const starsHtml = rating > 0 ? Array.from({length: 3}, (_, i) => 
+      `<span class="star ${i < rating ? 'active' : ''}">★</span>`
+    ).join('') : '';
+    
+    // Create media HTML with rating included (only if rating exists)
     let mediaWithRating = '';
     if (imgSrc) {
-      mediaWithRating = `<div class="card-image" style="background-image:url('${imgSrc}')" data-id="${row.id}"><div class="card-rating">${starsHtml}</div></div>`;
+      mediaWithRating = `<div class="card-image" style="background-image:url('${imgSrc}')" data-id="${row.id}">${starsHtml ? `<div class="card-rating">${starsHtml}</div>` : ''}</div>`;
     } else if (hasVideoOnly) {
       mediaWithRating = `
         <div class="card-image" data-id="${row.id}">
@@ -97,10 +81,10 @@ function renderGrid(rows) {
             <div class="card-play-icon"></div>
           </div>
           <div class="video-badge">▶</div>
-          <div class="card-rating">${starsHtml}</div>
+          ${starsHtml ? `<div class="card-rating">${starsHtml}</div>` : ''}
         </div>`;
     } else {
-      mediaWithRating = `<div class="card-image" data-id="${row.id}"><div class="no-thumb">No Media</div><div class="card-rating">${starsHtml}</div></div>`;
+      mediaWithRating = `<div class="card-image" data-id="${row.id}"><div class="no-thumb">No Media</div>${starsHtml ? `<div class="card-rating">${starsHtml}</div>` : ''}</div>`;
     }
     
     card.innerHTML = `
