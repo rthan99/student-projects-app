@@ -16,6 +16,7 @@ def api_list_projects():
         search=request.args.get("q"),
         category=request.args.get("category"),
         year=int(request.args["year"]) if request.args.get("year") else None,
+        rating=int(request.args["rating"]) if request.args.get("rating") else None,
         sort_by=request.args.get("sort", "created_at"),
         order=request.args.get("order", "desc"),
     )
@@ -38,7 +39,8 @@ def api_create_project():
     description = data.get("description")
     year = int(data["year"]) if data and data.get("year") else None
     video_url = data.get("video_url")
-    project_id = create_project(title, student_name, category, tags, description, year, video_url)
+    rating = int(data["rating"]) if data and data.get("rating") else 0
+    project_id = create_project(title, student_name, category, tags, description, year, video_url, rating)
 
     # If multipart form with files, handle optional image and video uploads here
     if request.files:
@@ -97,7 +99,10 @@ def api_update_project(project_id: int):
     if isinstance(year, str) and year.isdigit():
         year = int(year)
     video_url = data.get("video_url") if "video_url" in data else None
-    update_project(project_id, title, student_name, category, tags, description, year, video_url)
+    rating = data.get("rating") if "rating" in data else None
+    if isinstance(rating, str) and rating.isdigit():
+        rating = int(rating)
+    update_project(project_id, title, student_name, category, tags, description, year, video_url, rating)
     return ("", 204)
 
 

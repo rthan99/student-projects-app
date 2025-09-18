@@ -39,6 +39,13 @@ def initialize_database() -> None:
         except sqlite3.OperationalError:
             # Column already exists
             pass
+            
+        # Add rating column if it doesn't exist (for existing databases)
+        try:
+            cursor.execute("ALTER TABLE projects ADD COLUMN rating INTEGER DEFAULT 0;")
+        except sqlite3.OperationalError:
+            # Column already exists
+            pass
 
         cursor.execute(
             """

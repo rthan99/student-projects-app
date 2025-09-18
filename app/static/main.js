@@ -11,13 +11,15 @@ async function fetchProjects() {
   const q = document.getElementById('search').value.trim();
   const category = document.getElementById('category').value.trim();
   const year = document.getElementById('year').value.trim();
+  const rating = document.getElementById('rating').value.trim();
   if (q) params.set('q', q);
   if (category) params.set('category', category);
   if (year) params.set('year', year);
+  if (rating) params.set('rating', rating);
   params.set('sort', state.sort);
   params.set('order', state.order);
   
-  console.log('Filter params:', { q, category, year, sort: state.sort, order: state.order });
+  console.log('Filter params:', { q, category, year, rating, sort: state.sort, order: state.order });
   console.log('API URL:', `/api/projects?${params.toString()}`);
   
   const res = await fetch(`/api/projects?${params.toString()}`);
@@ -75,8 +77,34 @@ function renderGrid(rows) {
     } else {
       mediaHtml = `<div class="card-image" data-id="${row.id}"><div class="no-thumb">No Media</div></div>`;
     }
+    // Generate star rating HTML
+    const rating = row.rating || 0;
+    const starsHtml = Array.from({length: 3}, (_, i) => 
+      `<span class="star ${i < rating ? 'active' : ''}">★</span>`
+    ).join('');
+    
+    // Add rating to the media HTML
+    let mediaWithRating = '';
+    if (imgSrc) {
+      mediaWithRating = `<div class="card-image" style="background-image:url('${imgSrc}')" data-id="${row.id}"><div class="card-rating">${starsHtml}</div></div>`;
+    } else if (hasVideoOnly) {
+      mediaWithRating = `
+        <div class="card-image" data-id="${row.id}">
+          <video class="card-video" preload="metadata" muted playsinline>
+            <source src="/uploads/videos/${encodeURIComponent(row.thumbnail_video || '')}" />
+          </video>
+          <div class="card-video-overlay">
+            <div class="card-play-icon"></div>
+          </div>
+          <div class="video-badge">▶</div>
+          <div class="card-rating">${starsHtml}</div>
+        </div>`;
+    } else {
+      mediaWithRating = `<div class="card-image" data-id="${row.id}"><div class="no-thumb">No Media</div><div class="card-rating">${starsHtml}</div></div>`;
+    }
+    
     card.innerHTML = `
-      ${mediaHtml}
+      ${mediaWithRating}
       <div class="card-title">${escapeHtml(row.title)}</div>
       <div class="card-meta">
         ${row.category ? `<span>${escapeHtml(row.category)}</span>` : ''}
@@ -277,6 +305,7 @@ function setupFilters() {
     document.getElementById('search').value = '';
     document.getElementById('category').value = '';
     document.getElementById('year').value = '';
+    document.getElementById('rating').value = '';
     state.randomMode = false;
     const randomBtn = document.getElementById('randomProjects');
     randomBtn.textContent = '🎲 Show me 4 random projects';
@@ -302,6 +331,14 @@ function setupFilters() {
   });
 
   document.getElementById('year').addEventListener('change', () => {
+    state.randomMode = false;
+    const randomBtn = document.getElementById('randomProjects');
+    randomBtn.textContent = '🎲 Show me 4 random projects';
+    randomBtn.classList.remove('showing-all');
+    fetchProjects();
+  });
+
+  document.getElementById('rating').addEventListener('change', () => {
     state.randomMode = false;
     const randomBtn = document.getElementById('randomProjects');
     randomBtn.textContent = '🎲 Show me 4 random projects';
@@ -400,6 +437,22 @@ function setupCreate() {
   const createBtn = document.getElementById('createBtn');
   const titleInput = document.getElementById('new_title');
   
+  // Setup star rating for create form
+  const createRating = document.getElementById('new_rating');
+  let selectedRating = 0;
+  
+  if (createRating) {
+    createRating.addEventListener('click', (e) => {
+      if (e.target.classList.contains('star')) {
+        selectedRating = parseInt(e.target.dataset.rating);
+        // Update all stars
+        createRating.querySelectorAll('.star').forEach((star, index) => {
+          star.classList.toggle('active', index < selectedRating);
+        });
+      }
+    });
+  }
+  
   // Update button state based on form content
   function updateButtonState() {
     const hasTitle = titleInput.value.trim() !== '';
@@ -436,6 +489,7 @@ function setupCreate() {
     if (!Number.isNaN(year)) form.append('year', String(year));
     if (description) form.append('description', description);
     if (videoUrl) form.append('video_url', videoUrl);
+    if (selectedRating > 0) form.append('rating', String(selectedRating));
     if (imgInput?.files?.[0]) form.append('image', imgInput.files[0]);
     if (vidInput?.files?.[0]) form.append('video', vidInput.files[0]);
 
@@ -451,6 +505,9 @@ function setupCreate() {
       document.getElementById('new_video_url').value = '';
       imgInput.value = '';
       vidInput.value = '';
+      // Clear rating
+      selectedRating = 0;
+      createRating.querySelectorAll('.star').forEach(star => star.classList.remove('active'));
       updateButtonState();
       fetchProjects();
     } else {
@@ -499,6 +556,14 @@ function showProjectModal(project) {
     <label>Tags <input id="edit_tags" value="${escapeHtml(project.tags || '')}" placeholder="comma,separated" /></label>
     <label>Description <textarea id="edit_desc">${escapeHtml(project.description || '')}</textarea></label>
     <label>YouTube/Vimeo URL <input id="edit_video_url" value="${escapeHtml(project.video_url || '')}" placeholder="https://youtube.com/watch?v=..." /></label>
+    <div class="rating-input">
+      <label>Rating:</label>
+      <div class="star-rating" id="edit_rating">
+        <span class="star" data-rating="1">★</span>
+        <span class="star" data-rating="2">★</span>
+        <span class="star" data-rating="3">★</span>
+      </div>
+    </div>
   </div>`;
 
   html += '<div class="dnd-zone" id="dnd_zone">'
@@ -529,6 +594,27 @@ function showProjectModal(project) {
     document.querySelector('.modal-overlay').remove();
   });
 
+  // Setup star rating for edit modal
+  const editRating = document.getElementById('edit_rating');
+  let selectedEditRating = project.rating || 0;
+  
+  if (editRating) {
+    // Set initial rating
+    editRating.querySelectorAll('.star').forEach((star, index) => {
+      star.classList.toggle('active', index < selectedEditRating);
+    });
+    
+    editRating.addEventListener('click', (e) => {
+      if (e.target.classList.contains('star')) {
+        selectedEditRating = parseInt(e.target.dataset.rating);
+        // Update all stars
+        editRating.querySelectorAll('.star').forEach((star, index) => {
+          star.classList.toggle('active', index < selectedEditRating);
+        });
+      }
+    });
+  }
+
   // Save edits
   document.getElementById('save_project').addEventListener('click', async () => {
     const payload = {
@@ -539,6 +625,7 @@ function showProjectModal(project) {
       description: document.getElementById('edit_desc').value.trim() || null,
       tags: document.getElementById('edit_tags').value.trim(),
       video_url: document.getElementById('edit_video_url').value.trim() || null,
+      rating: selectedEditRating,
     };
     await fetch(`/api/projects/${project.id}`, {
       method: 'PUT',

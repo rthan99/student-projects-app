@@ -156,4 +156,38 @@ button:disabled { cursor: not-allowed; opacity: 0.6; transform: none; }
 .empty-state h3 { margin: 0 0 1rem 0; color: #475569; }
 .empty-state p { margin: 0; font-size: 14px; }
 
+/* Star Rating Styles */
+.star-rating { display: flex; gap: 4px; align-items: center; }
+.star { font-size: 20px; color: #d1d5db; cursor: pointer; transition: color 0.2s ease; user-select: none; }
+.star:hover { color: #fbbf24; }
+.star.active { color: #10b981; }
+.star-rating.readonly .star { cursor: default; }
+.star-rating.readonly .star:hover { color: inherit; }
+
+.rating-input { display: flex; align-items: center; gap: 8px; }
+.rating-input label { font-weight: 500; color: #374151; }
+
+/* Project card rating display */
+.card-rating { 
+  position: absolute; 
+  top: 8px; 
+  left: 8px; 
+  display: flex; 
+  gap: 2px; 
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 6px;
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+}
+.card-rating .star { 
+  font-size: 14px; 
+  color: #d1d5db; 
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.5));
+}
+.card-rating .star.active { 
+  color: #ffffff; 
+  text-shadow: 0 0 3px rgba(255, 255, 255, 1);
+}
+
 

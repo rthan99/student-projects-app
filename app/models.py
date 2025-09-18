@@ -10,16 +10,17 @@ def create_project(
     description: Optional[str] = None,
     year: Optional[int] = None,
     video_url: Optional[str] = None,
+    rating: Optional[int] = 0,
 ) -> int:
     tags_str = ",".join(tags) if tags else None
     with get_connection() as connection:
         cursor = connection.cursor()
         cursor.execute(
             """
-            INSERT INTO projects (title, student_name, category, tags, description, year, video_url)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO projects (title, student_name, category, tags, description, year, video_url, rating)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (title, student_name, category, tags_str, description, year, video_url),
+            (title, student_name, category, tags_str, description, year, video_url, rating),
         )
         return cursor.lastrowid
 
@@ -28,6 +29,7 @@ def list_projects(
     search: Optional[str] = None,
     category: Optional[str] = None,
     year: Optional[int] = None,
+    rating: Optional[int] = None,
     sort_by: str = "created_at",
     order: str = "desc",
 ) -> List[Dict[str, Any]]:
@@ -53,6 +55,9 @@ def list_projects(
     if year:
         query += " AND year = ?"
         params.append(year)
+    if rating is not None:
+        query += " AND rating = ?"
+        params.append(rating)
 
     query += f" ORDER BY {sort_by} {order}"
 
@@ -144,6 +149,7 @@ def update_project(
     description: Optional[str] = None,
     year: Optional[int] = None,
     video_url: Optional[str] = None,
+    rating: Optional[int] = None,
 ) -> None:
     fields = []
     params: List[Any] = []
@@ -169,6 +175,9 @@ def update_project(
     if video_url is not None:
         fields.append("video_url = ?")
         params.append(video_url)
+    if rating is not None:
+        fields.append("rating = ?")
+        params.append(rating)
     if not fields:
         return
     params.append(project_id)

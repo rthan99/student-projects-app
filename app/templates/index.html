@@ -31,6 +31,12 @@
             <select id="year">
               <option value="">All Years</option>
             </select>
+            <select id="rating">
+              <option value="">All Ratings</option>
+              <option value="1">1 Star</option>
+              <option value="2">2 Stars</option>
+              <option value="3">3 Stars</option>
+            </select>
             <button id="applyFilters">Apply</button>
             <button id="clearFilters">Clear</button>
           </div>
@@ -46,6 +52,14 @@
             <label>Cover Image: <input id="new_image" type="file" accept="image/*" /></label>
             <label> Video: <input id="new_video" type="file" accept="video/*" /></label>
             <input id="new_video_url" placeholder="YouTube/Vimeo URL (optional)" />
+            <div class="rating-input">
+              <label>Rating:</label>
+              <div class="star-rating" id="new_rating">
+                <span class="star" data-rating="1">★</span>
+                <span class="star" data-rating="2">★</span>
+                <span class="star" data-rating="3">★</span>
+              </div>
+            </div>
             <button id="createBtn">Create Project</button>
           </div>
         </section>
