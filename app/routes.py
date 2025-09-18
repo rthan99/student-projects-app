@@ -32,7 +32,12 @@ def api_create_project():
     student_name = data.get("student_name")
     if not title or not student_name:
         return jsonify({"error": "title and student_name are required"}), 400
-    category = data.get("category")
+    categories = data.get("categories")
+    if isinstance(categories, str):
+        categories = [cat.strip() for cat in categories.split(",") if cat.strip()]
+    elif not isinstance(categories, list):
+        categories = []
+    
     tags = data.get("tags")
     if isinstance(tags, str):
         tags = [t.strip() for t in tags.split(",") if t.strip()]
@@ -40,7 +45,7 @@ def api_create_project():
     year = int(data["year"]) if data and data.get("year") else None
     video_url = data.get("video_url")
     rating = int(data["rating"]) if data and data.get("rating") else 0
-    project_id = create_project(title, student_name, category, tags, description, year, video_url, rating)
+    project_id = create_project(title, student_name, categories, tags, description, year, video_url, rating)
 
     # If multipart form with files, handle optional image and video uploads here
     if request.files:
@@ -90,7 +95,12 @@ def api_update_project(project_id: int):
         return jsonify({"error": "No data provided"}), 400
     title = data.get("title") if "title" in data else None
     student_name = data.get("student_name") if "student_name" in data else None
-    category = data.get("category") if "category" in data else None
+    categories = data.get("categories") if "categories" in data else None
+    if categories and isinstance(categories, str):
+        categories = [cat.strip() for cat in categories.split(",") if cat.strip()]
+    elif categories and not isinstance(categories, list):
+        categories = []
+    
     tags = data.get("tags") if "tags" in data else None
     if isinstance(tags, str):
         tags = [t.strip() for t in tags.split(",") if t.strip()]
@@ -102,7 +112,7 @@ def api_update_project(project_id: int):
     rating = data.get("rating") if "rating" in data else None
     if isinstance(rating, str) and rating.isdigit():
         rating = int(rating)
-    update_project(project_id, title, student_name, category, tags, description, year, video_url, rating)
+    update_project(project_id, title, student_name, categories, tags, description, year, video_url, rating)
     return ("", 204)
 
 

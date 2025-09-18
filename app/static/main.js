@@ -91,7 +91,7 @@ function renderGrid(rows) {
       ${mediaWithRating}
       <div class="card-title">${escapeHtml(row.title)}</div>
       <div class="card-meta">
-        ${row.category ? `<span>${escapeHtml(row.category)}</span>` : ''}
+        ${row.categories && row.categories.length > 0 ? row.categories.map(cat => `<span class="category-tag">${escapeHtml(cat)}</span>`).join('') : ''}
         ${row.year ? `<span>${row.year}${(row.video_count > 0 || row.video_url) ? ' 🎥' : ''}</span>` : ''}
       </div>
     `;
@@ -392,9 +392,9 @@ function populateFilters(rows) {
 
   const years = Array.from(new Set(rows.map(r => r.year).filter(Boolean))).sort();
   
-  // Get all unique categories (single categories, not comma-separated)
+  // Get all unique categories from the categories array
   const allCategories = rows
-    .map(r => r.category)
+    .flatMap(r => r.categories || [])
     .filter(Boolean)
     .map(cat => cat.trim())
     .filter(Boolean);
@@ -501,14 +501,15 @@ function setupCreate() {
     form.append('student_name', 'NEMO x Delft');
     
     // Only add fields that exist in the HTML
-    const category = document.getElementById('new_category').value.trim();
+    const categoryInput = document.getElementById('new_category').value.trim();
+    const categories = categoryInput ? categoryInput.split(',').map(cat => cat.trim()).filter(Boolean) : [];
     const year = parseInt(document.getElementById('new_year').value, 10);
     const description = document.getElementById('new_desc').value.trim();
     const videoUrl = document.getElementById('new_video_url').value.trim();
     const imgInput = document.getElementById('new_image');
     const vidInput = document.getElementById('new_video');
     
-    if (category) form.append('category', category);
+    if (categories.length > 0) form.append('categories', JSON.stringify(categories));
     if (!Number.isNaN(year)) form.append('year', String(year));
     if (description) form.append('description', description);
     if (videoUrl) form.append('video_url', videoUrl);
@@ -574,7 +575,7 @@ function showProjectModal(project) {
   html += `<div class="form-grid">
     <label>Title <input id="edit_title" value="${escapeHtml(project.title)}" /></label>
     <label>Student <input id="edit_student" value="${escapeHtml(project.student_name)}" /></label>
-    <label>Category <input id="edit_category" value="${escapeHtml(project.category || '')}" /></label>
+    <label>Categories <input id="edit_category" value="${escapeHtml((project.categories || []).join(', '))}" placeholder="comma-separated" /></label>
     <label>Year <input id="edit_year" type="number" value="${project.year ?? ''}" /></label>
     <label>Tags <input id="edit_tags" value="${escapeHtml(project.tags || '')}" placeholder="comma,separated" /></label>
     <label>Description <textarea id="edit_desc">${escapeHtml(project.description || '')}</textarea></label>
@@ -675,7 +676,8 @@ function showProjectModal(project) {
     const payload = {
       title: document.getElementById('edit_title').value.trim(),
       student_name: document.getElementById('edit_student').value.trim(),
-      category: document.getElementById('edit_category').value.trim() || null,
+      categories: document.getElementById('edit_category').value.trim() ? 
+        document.getElementById('edit_category').value.split(',').map(cat => cat.trim()).filter(Boolean) : [],
       year: parseInt(document.getElementById('edit_year').value, 10) || null,
       description: document.getElementById('edit_desc').value.trim() || null,
       tags: document.getElementById('edit_tags').value.trim(),

@@ -2,10 +2,58 @@ from typing import List, Optional, Dict, Any
 from .db import get_connection
 
 
+def get_or_create_category(category_name: str) -> int:
+    """Get category ID, creating it if it doesn't exist."""
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        # Try to get existing category
+        cursor.execute("SELECT id FROM categories WHERE name = ?", (category_name,))
+        result = cursor.fetchone()
+        if result:
+            return result[0]
+        
+        # Create new category
+        cursor.execute("INSERT INTO categories (name) VALUES (?)", (category_name,))
+        return cursor.lastrowid
+
+
+def set_project_categories(project_id: int, category_names: List[str]) -> None:
+    """Set categories for a project, replacing existing ones."""
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        # Remove existing categories
+        cursor.execute("DELETE FROM project_categories WHERE project_id = ?", (project_id,))
+        
+        # Add new categories
+        for category_name in category_names:
+            if category_name.strip():
+                category_id = get_or_create_category(category_name.strip())
+                cursor.execute(
+                    "INSERT OR IGNORE INTO project_categories (project_id, category_id) VALUES (?, ?)",
+                    (project_id, category_id)
+                )
+
+
+def get_project_categories(project_id: int) -> List[str]:
+    """Get all category names for a project."""
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute(
+            """
+            SELECT c.name FROM categories c
+            JOIN project_categories pc ON c.id = pc.category_id
+            WHERE pc.project_id = ?
+            ORDER BY c.name
+            """,
+            (project_id,)
+        )
+        return [row[0] for row in cursor.fetchall()]
+
+
 def create_project(
     title: str,
     student_name: str,
-    category: Optional[str] = None,
+    categories: Optional[List[str]] = None,
     tags: Optional[List[str]] = None,
     description: Optional[str] = None,
     year: Optional[int] = None,
@@ -20,9 +68,15 @@ def create_project(
             INSERT INTO projects (title, student_name, category, tags, description, year, video_url, rating)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (title, student_name, category, tags_str, description, year, video_url, rating),
+            (title, student_name, None, tags_str, description, year, video_url, rating),
         )
-        return cursor.lastrowid
+        project_id = cursor.lastrowid
+        
+        # Set categories
+        if categories:
+            set_project_categories(project_id, categories)
+        
+        return project_id
 
 
 def list_projects(
@@ -33,35 +87,45 @@ def list_projects(
     sort_by: str = "created_at",
     order: str = "desc",
 ) -> List[Dict[str, Any]]:
-    valid_sort = {"created_at", "title", "student_name", "year", "category"}
+    valid_sort = {"created_at", "title", "student_name", "year"}
     if sort_by not in valid_sort:
         sort_by = "created_at"
     order = "ASC" if order.lower() == "asc" else "DESC"
 
-    query = "SELECT * FROM projects WHERE 1=1"
+    # Build query with category filtering
+    if category:
+        query = """
+            SELECT DISTINCT p.* FROM projects p
+            JOIN project_categories pc ON p.id = pc.project_id
+            JOIN categories c ON pc.category_id = c.id
+            WHERE 1=1
+        """
+    else:
+        query = "SELECT * FROM projects WHERE 1=1"
+    
     params: List[Any] = []
     if search:
-        query += " AND (title LIKE ? OR student_name LIKE ? OR description LIKE ?)"
+        query += " AND (p.title LIKE ? OR p.student_name LIKE ? OR p.description LIKE ?)"
         like = f"%{search}%"
         params.extend([like, like, like])
     if category:
-        query += " AND category = ?"
+        query += " AND c.name = ?"
         params.append(category)
     if year:
-        query += " AND year = ?"
+        query += " AND p.year = ?"
         params.append(year)
     if rating is not None:
-        query += " AND rating = ?"
+        query += " AND p.rating = ?"
         params.append(rating)
 
-    query += f" ORDER BY {sort_by} {order}"
+    query += f" ORDER BY p.{sort_by} {order}"
 
     with get_connection() as connection:
         cursor = connection.cursor()
         rows = cursor.execute(query, params).fetchall()
         projects = [dict(row) for row in rows]
 
-    # Attach media counts and thumbnail image
+    # Attach media counts, thumbnail image, and categories
     with get_connection() as connection:
         cursor = connection.cursor()
         for project in projects:
@@ -77,6 +141,10 @@ def list_projects(
                 (project["id"],),
             ).fetchone()
             project["thumbnail_image"] = thumb_row["filename"] if thumb_row else None
+            
+            # Get categories for this project
+            project["categories"] = get_project_categories(project["id"])
+            
             if project["thumbnail_image"] is None and project["video_count"] > 0:
                 vrow = cursor.execute(
                     "SELECT filename FROM media WHERE project_id = ? AND media_type = 'video' ORDER BY created_at DESC LIMIT 1",
@@ -139,7 +207,7 @@ def update_project(
     project_id: int,
     title: Optional[str] = None,
     student_name: Optional[str] = None,
-    category: Optional[str] = None,
+    categories: Optional[List[str]] = None,
     tags: Optional[List[str]] = None,
     description: Optional[str] = None,
     year: Optional[int] = None,
@@ -154,9 +222,7 @@ def update_project(
     if student_name is not None:
         fields.append("student_name = ?")
         params.append(student_name)
-    if category is not None:
-        fields.append("category = ?")
-        params.append(category)
+    # Handle categories separately
     if tags is not None:
         tags_str = ",".join(tags) if tags else None
         fields.append("tags = ?")
@@ -173,10 +239,13 @@ def update_project(
     if rating is not None:
         fields.append("rating = ?")
         params.append(rating)
-    if not fields:
-        return
-    params.append(project_id)
-    with get_connection() as connection:
-        cursor = connection.cursor()
-        cursor.execute(f"UPDATE projects SET {', '.join(fields)} WHERE id = ?", params)
+    if fields:
+        params.append(project_id)
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute(f"UPDATE projects SET {', '.join(fields)} WHERE id = ?", params)
+    
+    # Update categories if provided
+    if categories is not None:
+        set_project_categories(project_id, categories)
 

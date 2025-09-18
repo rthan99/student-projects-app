@@ -61,6 +61,30 @@ def initialize_database() -> None:
             """
         )
 
+        # Create categories table
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            """
+        )
+
+        # Create project_categories junction table
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS project_categories (
+                project_id INTEGER NOT NULL,
+                category_id INTEGER NOT NULL,
+                PRIMARY KEY (project_id, category_id),
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+            );
+            """
+        )
+
         connection.commit()
 
 
