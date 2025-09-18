@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Projects</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <h1>DEF Projects</h1>
+    
+    <div class="header">
+      <div class="header-content">
+        <section class="controls">
+          <button id="randomProjects" class="random-btn">🎲 Show me 4 random projects</button>
+          <input id="search" placeholder="Search projects..." />
+          <select id="category">
+            <option value="">All Categories</option>
+          </select>
+          <select id="year">
+            <option value="">All Years</option>
+          </select>
+          <button id="applyFilters">Apply</button>
+          <button id="clearFilters">Clear</button>
+          <button id="createToggle" class="circle-btn" aria-label="Create a new project">
+            <span class="icon">+</span>
+          </button>
+        </section>
+
+        <section class="create-form collapsible">
+          <h2>Create New Project</h2>
+          <div class="grid">
+            <input id="new_title" placeholder="Project Title" />
+            <input id="new_category" placeholder="Category" />
+            <input id="new_year" type="number" placeholder="Year" />
+            <textarea id="new_desc" placeholder="Project Description"></textarea>
+            <label>Cover Image: <input id="new_image" type="file" accept="image/*" /></label>
+            <label> Video: <input id="new_video" type="file" accept="video/*" /></label>
+            <input id="new_video_url" placeholder="YouTube/Vimeo URL (optional)" />
+            <button id="createBtn">Create Project</button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div id="projectGrid" class="card-grid"></div>
+    </div>
+
+    <script src="/static/main.js"></script>
+  </body>
+  </html>
+
+
