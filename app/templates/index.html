@@ -45,7 +45,17 @@
           <h2>Create New Project</h2>
           <div class="grid">
             <input id="new_title" placeholder="Project Title" />
-            <input id="new_category" placeholder="Categories (comma-separated)" />
+            <div class="category-management">
+              <label>Categories:</label>
+              <div class="category-input-section">
+                <input id="new_category" placeholder="Categories (comma-separated)" />
+                <button type="button" id="add_new_category_btn" class="add-category-btn">+ Add Category</button>
+              </div>
+              <div class="existing-categories" id="new_existing_categories">
+                <div class="category-list-title">Existing Categories:</div>
+                <div class="category-list" id="new_category_list"></div>
+              </div>
+            </div>
             <input id="new_year" type="number" placeholder="Year" />
             <textarea id="new_desc" placeholder="Project Description"></textarea>
             <label>Cover Image: <input id="new_image" type="file" accept="image/*" /></label>

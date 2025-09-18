@@ -45,6 +45,8 @@ async function fetchProjects() {
   }
   // Always populate filters with ALL projects, not just filtered results
   populateFilters(state.allProjects);
+  // Refresh category lists
+  refreshCategoryLists();
 }
 
 function renderGrid(rows) {
@@ -420,6 +422,97 @@ function showRandomProjects() {
   renderGrid(randomProjects);
 }
 
+function refreshCategoryLists() {
+  // Refresh create form category list
+  const newCategoryList = document.getElementById('new_category_list');
+  if (newCategoryList) {
+    const allCategories = state.allProjects
+      .flatMap(r => (r.categories && Array.isArray(r.categories)) ? r.categories : [])
+      .filter(Boolean)
+      .map(cat => cat.trim())
+      .filter(Boolean);
+    
+    const uniqueCategories = Array.from(new Set(allCategories)).sort((a,b)=>a.localeCompare(b));
+    newCategoryList.innerHTML = uniqueCategories.map(cat => 
+      `<span class="category-option" data-category="${escapeHtml(cat)}">${escapeHtml(cat)}</span>`
+    ).join('');
+  }
+  
+  // Refresh edit modal category list if it exists
+  const editCategoryList = document.getElementById('category_list');
+  if (editCategoryList) {
+    const allCategories = state.allProjects
+      .flatMap(r => (r.categories && Array.isArray(r.categories)) ? r.categories : [])
+      .filter(Boolean)
+      .map(cat => cat.trim())
+      .filter(Boolean);
+    
+    const uniqueCategories = Array.from(new Set(allCategories)).sort((a,b)=>a.localeCompare(b));
+    editCategoryList.innerHTML = uniqueCategories.map(cat => 
+      `<span class="category-option" data-category="${escapeHtml(cat)}">${escapeHtml(cat)}</span>`
+    ).join('');
+  }
+}
+
+function setupCreateCategoryManagement() {
+  const categoryInput = document.getElementById('new_category');
+  const addCategoryBtn = document.getElementById('add_new_category_btn');
+  const categoryList = document.getElementById('new_category_list');
+  
+  if (!categoryInput || !addCategoryBtn || !categoryList) return;
+  
+  // Get all existing categories
+  const allCategories = state.allProjects
+    .flatMap(r => (r.categories && Array.isArray(r.categories)) ? r.categories : [])
+    .filter(Boolean)
+    .map(cat => cat.trim())
+    .filter(Boolean);
+  
+  const uniqueCategories = Array.from(new Set(allCategories)).sort((a,b)=>a.localeCompare(b));
+  
+  // Populate category list
+  categoryList.innerHTML = uniqueCategories.map(cat => 
+    `<span class="category-option" data-category="${escapeHtml(cat)}">${escapeHtml(cat)}</span>`
+  ).join('');
+  
+  // Handle clicking on existing categories
+  categoryList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('category-option')) {
+      const category = e.target.dataset.category;
+      const currentCategories = categoryInput.value ? categoryInput.value.split(',').map(c => c.trim()).filter(Boolean) : [];
+      
+      if (!currentCategories.includes(category)) {
+        currentCategories.push(category);
+        categoryInput.value = currentCategories.join(', ');
+        e.target.classList.add('selected');
+      }
+    }
+  });
+  
+  // Handle add category button
+  addCategoryBtn.addEventListener('click', () => {
+    const newCategory = prompt('Enter new category name:');
+    if (newCategory && newCategory.trim()) {
+      const category = newCategory.trim();
+      const currentCategories = categoryInput.value ? categoryInput.value.split(',').map(c => c.trim()).filter(Boolean) : [];
+      
+      if (!currentCategories.includes(category)) {
+        currentCategories.push(category);
+        categoryInput.value = currentCategories.join(', ');
+        
+        // Add to category list if it's new
+        if (!uniqueCategories.includes(category)) {
+          const categoryOption = document.createElement('span');
+          categoryOption.className = 'category-option selected';
+          categoryOption.dataset.category = category;
+          categoryOption.textContent = category;
+          categoryList.appendChild(categoryOption);
+        }
+      }
+    }
+  });
+}
+
 function setupCreate() {
   const createBtn = document.getElementById('createBtn');
   const titleInput = document.getElementById('new_title');
@@ -439,6 +532,9 @@ function setupCreate() {
       }
     });
   }
+  
+  // Setup category management for create form
+  setupCreateCategoryManagement();
   
   // Update button state based on form content
   function updateButtonState() {
@@ -534,6 +630,8 @@ function setupCreate() {
       createRating.querySelectorAll('.star').forEach(star => star.classList.remove('active'));
       updateButtonState();
       fetchProjects();
+      // Refresh category lists after creating new project
+      refreshCategoryLists();
     } else {
       const err = await res.json();
       alert(err.error || 'Failed to create');
@@ -570,12 +668,87 @@ function showCreateNotice(projectData) {
   }, 2000);
 }
 
+function setupCategoryManagement(project) {
+  const categoryInput = document.getElementById('edit_category');
+  const addCategoryBtn = document.getElementById('add_category_btn');
+  const categoryList = document.getElementById('category_list');
+  
+  // Get all existing categories
+  const allCategories = state.allProjects
+    .flatMap(r => (r.categories && Array.isArray(r.categories)) ? r.categories : [])
+    .filter(Boolean)
+    .map(cat => cat.trim())
+    .filter(Boolean);
+  
+  const uniqueCategories = Array.from(new Set(allCategories)).sort((a,b)=>a.localeCompare(b));
+  
+  // Populate category list
+  categoryList.innerHTML = uniqueCategories.map(cat => 
+    `<span class="category-option" data-category="${escapeHtml(cat)}">${escapeHtml(cat)}</span>`
+  ).join('');
+  
+  // Handle clicking on existing categories
+  categoryList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('category-option')) {
+      const category = e.target.dataset.category;
+      const currentCategories = categoryInput.value ? categoryInput.value.split(',').map(c => c.trim()).filter(Boolean) : [];
+      
+      if (!currentCategories.includes(category)) {
+        currentCategories.push(category);
+        categoryInput.value = currentCategories.join(', ');
+        e.target.classList.add('selected');
+      }
+    }
+  });
+  
+  // Handle add category button
+  addCategoryBtn.addEventListener('click', () => {
+    const newCategory = prompt('Enter new category name:');
+    if (newCategory && newCategory.trim()) {
+      const category = newCategory.trim();
+      const currentCategories = categoryInput.value ? categoryInput.value.split(',').map(c => c.trim()).filter(Boolean) : [];
+      
+      if (!currentCategories.includes(category)) {
+        currentCategories.push(category);
+        categoryInput.value = currentCategories.join(', ');
+        
+        // Add to category list if it's new
+        if (!uniqueCategories.includes(category)) {
+          const categoryOption = document.createElement('span');
+          categoryOption.className = 'category-option selected';
+          categoryOption.dataset.category = category;
+          categoryOption.textContent = category;
+          categoryList.appendChild(categoryOption);
+        }
+      }
+    }
+  });
+  
+  // Update visual state based on current categories
+  const currentCategories = project.categories || [];
+  categoryList.querySelectorAll('.category-option').forEach(option => {
+    if (currentCategories.includes(option.dataset.category)) {
+      option.classList.add('selected');
+    }
+  });
+}
+
 function showProjectModal(project) {
   let html = `<div class="modal-overlay"><div class="modal">`;
   html += `<div class="form-grid">
     <label>Title <input id="edit_title" value="${escapeHtml(project.title)}" /></label>
     <label>Student <input id="edit_student" value="${escapeHtml(project.student_name)}" /></label>
-    <label>Categories <input id="edit_category" value="${escapeHtml((project.categories || []).join(', '))}" placeholder="comma-separated" /></label>
+    <div class="category-management">
+      <label>Categories:</label>
+      <div class="category-input-section">
+        <input id="edit_category" value="${escapeHtml((project.categories || []).join(', '))}" placeholder="comma-separated" />
+        <button type="button" id="add_category_btn" class="add-category-btn">+ Add Category</button>
+      </div>
+      <div class="existing-categories" id="existing_categories">
+        <div class="category-list-title">Existing Categories:</div>
+        <div class="category-list" id="category_list"></div>
+      </div>
+    </div>
     <label>Year <input id="edit_year" type="number" value="${project.year ?? ''}" /></label>
     <label>Tags <input id="edit_tags" value="${escapeHtml(project.tags || '')}" placeholder="comma,separated" /></label>
     <label>Description <textarea id="edit_desc">${escapeHtml(project.description || '')}</textarea></label>
@@ -627,17 +800,18 @@ function showProjectModal(project) {
     editCategoryInput.setAttribute('list', 'edit-category-options');
     editCategoryInput.parentNode.appendChild(editDatalist);
     
-    const categories = Array.from(new Set(
-      state.allProjects
-        .map(p => p.category)
-        .filter(Boolean)
-        .map(cat => cat.trim())
-    )).sort();
+    const allCategories = state.allProjects
+      .flatMap(r => (r.categories && Array.isArray(r.categories)) ? r.categories : [])
+      .filter(Boolean)
+      .map(cat => cat.trim())
+      .filter(Boolean);
     
-    editDatalist.innerHTML = categories.map(cat => 
-      `<option value="${escapeHtml(cat)}">`
-    ).join('');
+    const uniqueCategories = Array.from(new Set(allCategories)).sort((a,b)=>a.localeCompare(b));
+    editDatalist.innerHTML = uniqueCategories.map(c => `<option value="${escapeHtml(c)}">`).join('');
   }
+
+  // Setup category management functionality
+  setupCategoryManagement(project);
 
   // Setup star rating for edit modal
   const editRating = document.getElementById('edit_rating');
