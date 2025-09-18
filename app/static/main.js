@@ -547,6 +547,7 @@ function showProjectModal(project) {
         <span class="star" data-rating="2">★</span>
         <span class="star" data-rating="3">★</span>
       </div>
+      <button type="button" id="clear_rating" class="clear-rating-btn">Clear Rating</button>
     </div>
   </div>`;
 
@@ -596,6 +597,17 @@ function showProjectModal(project) {
           star.classList.toggle('active', index < selectedEditRating);
         });
       }
+    });
+  }
+
+  // Setup clear rating button
+  const clearRatingBtn = document.getElementById('clear_rating');
+  if (clearRatingBtn) {
+    clearRatingBtn.addEventListener('click', () => {
+      selectedEditRating = 0;
+      editRating.querySelectorAll('.star').forEach(star => {
+        star.classList.remove('active');
+      });
     });
   }
 
