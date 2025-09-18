@@ -184,7 +184,7 @@ function setupFilters() {
     return;
   }
 
-  // Mobile filter toggle functionality
+  // Mobile filter toggle functionality (similar to create form)
   const filterToggle = document.getElementById('filterToggle');
   const controlsFilters = document.getElementById('controlsFilters');
   
@@ -192,39 +192,60 @@ function setupFilters() {
     // Check if we're on mobile (screen width <= 768px)
     const isMobile = () => window.innerWidth <= 768;
     
-    // Initialize mobile state
+    // Initialize mobile state - filters hidden by default on mobile
     if (isMobile()) {
-      controlsFilters.classList.add('collapsed');
+      controlsFilters.style.maxHeight = '0px';
+    } else {
+      // On desktop, show filters by default
+      controlsFilters.classList.add('open');
     }
     
-    // Toggle filters on mobile
+    // Toggle filters (works like create form)
     filterToggle.addEventListener('click', () => {
-      if (isMobile()) {
-        const isCollapsed = controlsFilters.classList.contains('collapsed');
-        if (isCollapsed) {
-          controlsFilters.classList.remove('collapsed');
-          filterToggle.classList.add('active');
-          filterToggle.querySelector('.icon').textContent = '✕';
-        } else {
-          controlsFilters.classList.add('collapsed');
-          filterToggle.classList.remove('active');
-          filterToggle.querySelector('.icon').textContent = '🔍';
-        }
+      const willOpen = !controlsFilters.classList.contains('open');
+      
+      if (willOpen) {
+        controlsFilters.classList.add('open');
+        // Measure content height by temporarily setting max-height to large value
+        const scrollH = controlsFilters.scrollHeight;
+        controlsFilters.style.maxHeight = scrollH + 'px';
+        filterToggle.classList.add('active');
+        filterToggle.querySelector('.icon').textContent = '✕';
+        filterToggle.querySelector('.text').textContent = 'Close';
+      } else {
+        // Collapse with transition
+        const scrollH = controlsFilters.scrollHeight;
+        controlsFilters.style.maxHeight = scrollH + 'px';
+        requestAnimationFrame(() => {
+          controlsFilters.style.maxHeight = '0px';
+          controlsFilters.classList.remove('open');
+        });
+        filterToggle.classList.remove('active');
+        filterToggle.querySelector('.icon').textContent = '🔍';
+        filterToggle.querySelector('.text').textContent = 'Filter';
       }
+      // Fade handled via opacity coupled to .open class
+      controlsFilters.style.opacity = willOpen ? '1' : '0';
     });
     
     // Handle window resize
     window.addEventListener('resize', () => {
       if (!isMobile()) {
         // On desktop, always show filters
-        controlsFilters.classList.remove('collapsed');
+        controlsFilters.classList.add('open');
+        controlsFilters.style.maxHeight = 'none';
+        controlsFilters.style.opacity = '1';
         filterToggle.classList.remove('active');
         filterToggle.querySelector('.icon').textContent = '🔍';
+        filterToggle.querySelector('.text').textContent = 'Filter';
       } else {
         // On mobile, hide filters by default
-        controlsFilters.classList.add('collapsed');
+        controlsFilters.classList.remove('open');
+        controlsFilters.style.maxHeight = '0px';
+        controlsFilters.style.opacity = '0';
         filterToggle.classList.remove('active');
         filterToggle.querySelector('.icon').textContent = '🔍';
+        filterToggle.querySelector('.text').textContent = 'Filter';
       }
     });
   }
