@@ -183,6 +183,51 @@ function setupFilters() {
     console.error('Random projects button not found');
     return;
   }
+
+  // Mobile filter toggle functionality
+  const filterToggle = document.getElementById('filterToggle');
+  const controlsFilters = document.getElementById('controlsFilters');
+  
+  if (filterToggle && controlsFilters) {
+    // Check if we're on mobile (screen width <= 768px)
+    const isMobile = () => window.innerWidth <= 768;
+    
+    // Initialize mobile state
+    if (isMobile()) {
+      controlsFilters.classList.add('collapsed');
+    }
+    
+    // Toggle filters on mobile
+    filterToggle.addEventListener('click', () => {
+      if (isMobile()) {
+        const isCollapsed = controlsFilters.classList.contains('collapsed');
+        if (isCollapsed) {
+          controlsFilters.classList.remove('collapsed');
+          filterToggle.classList.add('active');
+          filterToggle.querySelector('.icon').textContent = '✕';
+        } else {
+          controlsFilters.classList.add('collapsed');
+          filterToggle.classList.remove('active');
+          filterToggle.querySelector('.icon').textContent = '🔍';
+        }
+      }
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      if (!isMobile()) {
+        // On desktop, always show filters
+        controlsFilters.classList.remove('collapsed');
+        filterToggle.classList.remove('active');
+        filterToggle.querySelector('.icon').textContent = '🔍';
+      } else {
+        // On mobile, hide filters by default
+        controlsFilters.classList.add('collapsed');
+        filterToggle.classList.remove('active');
+        filterToggle.querySelector('.icon').textContent = '🔍';
+      }
+    });
+  }
   
   randomBtn.addEventListener('click', () => {
     state.randomMode = !state.randomMode;

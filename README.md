@@ -29,9 +29,57 @@ A Flask web application for managing and displaying student projects with image 
    ```
 4. **Run the application**:
    ```bash
-   python run.py
+   # For local access only
+   python3 run.py
+   
+   # For network access (recommended)
+   python3 run_website.py
+   
+   # Interactive hosting options
+   ./start_hosting.sh
    ```
-5. **Open your browser** and go to: `http://127.0.0.1:5050`
+5. **Open your browser** and go to: `http://localhost:8080` (or the port shown in terminal)
+
+## 🌐 Hosting Options
+
+### Local Network Hosting (Recommended)
+```bash
+python3 run_website.py
+```
+- ✅ Accessible to anyone on your WiFi
+- ✅ Data stays on your laptop
+- ✅ No monthly costs
+- ✅ Automatic port detection (avoids macOS port conflicts)
+
+### Cloud Hosting (Free Options)
+```bash
+python3 run_cloud.py
+```
+- ✅ Always available online
+- ✅ Share with anyone worldwide
+- ✅ Free tiers available on Railway/Render
+
+## 📁 Project Structure
+
+```
+student-projects-app/
+├── app/                    # Flask application
+│   ├── static/            # CSS and JavaScript
+│   ├── templates/         # HTML templates
+│   ├── models.py          # Database models
+│   ├── routes.py          # API routes
+│   └── db.py             # Database setup
+├── uploads/               # User uploaded files
+│   ├── images/           # Project images
+│   └── videos/           # Project videos
+├── run.py                # Basic Flask runner
+├── run_website.py        # Network-accessible runner
+├── run_cloud.py          # Cloud deployment helper
+├── start_hosting.sh      # Interactive hosting menu
+├── import_projects.py    # Excel import utility
+├── requirements.txt      # Python dependencies
+└── README.md            # This file
+```
 
 ## Usage
 

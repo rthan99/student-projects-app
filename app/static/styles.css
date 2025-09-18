@@ -29,6 +29,20 @@ button:disabled { cursor: not-allowed; opacity: 0.6; transform: none; }
 .controls #applyFilters:hover { background: #334155; }
 .controls #clearFilters { background: transparent; border: 1px solid #cbd5e1; color: #64748b; }
 .controls #clearFilters:hover { background: #f8fafc; }
+
+/* Mobile filter toggle */
+.controls-top { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.filter-toggle-btn { width: 40px; height: 40px; border-radius: 999px; display: none; border: none; background: #475569; color: #fff; transition: all 0.2s ease; }
+.filter-toggle-btn:hover { background: #334155; }
+.filter-toggle-btn .icon { font-size: 16px; }
+.filter-toggle-btn.active { background: #10b981; }
+
+.controls-filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 12px; transition: all 0.3s ease; }
+.controls-filters.collapsed { 
+  display: none; 
+  opacity: 0;
+  transform: translateY(-10px);
+}
 .circle-btn { width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center; border: none; background: #2f2f33; color: #fff; transition: transform .25s ease; }
 .circle-btn .icon { font-size: 20px; line-height: 1; }
 .circle-btn:hover { background: #1f1f22; }
@@ -90,7 +104,10 @@ button:disabled { cursor: not-allowed; opacity: 0.6; transform: none; }
   .header-content { padding: 0 1rem; }
   .main-content { padding: 1rem; }
   .controls { flex-direction: column; align-items: stretch; gap: 8px; }
-  .controls > * { width: 100%; }
+  .controls-top { justify-content: space-between; }
+  .filter-toggle-btn { display: grid; place-items: center; }
+  .controls-filters { flex-direction: column; align-items: stretch; gap: 8px; }
+  .controls-filters > * { width: 100%; }
   .card-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
   h1 { font-size: 2rem; padding: 1.5rem 0; }
 }
@@ -99,6 +116,8 @@ button:disabled { cursor: not-allowed; opacity: 0.6; transform: none; }
   .card-grid { grid-template-columns: 1fr; }
   .controls { margin-bottom: 1rem; }
   .main-content { padding: 0.5rem; }
+  .controls-top { flex-wrap: wrap; gap: 8px; }
+  .random-btn { font-size: 14px; padding: 8px 12px; }
 }
 
 /* Loading state */
