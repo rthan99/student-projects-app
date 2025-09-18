@@ -65,10 +65,10 @@ def create_project(
         cursor = connection.cursor()
         cursor.execute(
             """
-            INSERT INTO projects (title, student_name, category, tags, description, year, video_url, rating)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO projects (title, student_name, tags, description, year, video_url, rating)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-            (title, student_name, None, tags_str, description, year, video_url, rating),
+            (title, student_name, tags_str, description, year, video_url, rating),
         )
         project_id = cursor.lastrowid
         
@@ -181,6 +181,11 @@ def get_project(project_id: int) -> Optional[Dict[str, Any]]:
             (project_id,),
         ).fetchall()
         project["media"] = [dict(r) for r in media_rows]
+        
+        # Get categories for this project
+        categories = get_project_categories(project_id)
+        project["categories"] = categories if categories else []
+        
         return project
 
 

@@ -1,7 +1,7 @@
 * { box-sizing: border-box; }
 body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f8fafc; color: #1e293b; line-height: 1.6; }
 .container { max-width: 1200px; margin: 0 auto; padding: 0; }
-h1 { margin: 0; font-size: 2.5rem; font-weight: 700; color: #0f172a; text-align: center; padding: 2rem 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 2rem; }
+h1 { margin: 0; font-size: 2.5rem; font-weight: 700; color: #0f172a; text-align: center; padding: 2rem 0; background: linear-gradient(135deg, #66ea6a 0%, #4ba254 100%); color: white; margin-bottom: 2rem; }
 
 /* Sticky header */
 .header { position: sticky; top: 0; background: white; border-bottom: 1px solid #e2e8f0; padding: 1rem 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }

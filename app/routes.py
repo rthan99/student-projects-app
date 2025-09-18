@@ -42,9 +42,9 @@ def api_create_project():
     if isinstance(tags, str):
         tags = [t.strip() for t in tags.split(",") if t.strip()]
     description = data.get("description")
-    year = int(data["year"]) if data and data.get("year") else None
+    year = int(data.get("year")) if data and data.get("year") else None
     video_url = data.get("video_url")
-    rating = int(data["rating"]) if data and data.get("rating") else 0
+    rating = int(data.get("rating")) if data and data.get("rating") else 0
     project_id = create_project(title, student_name, categories, tags, description, year, video_url, rating)
 
     # If multipart form with files, handle optional image and video uploads here
