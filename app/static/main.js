@@ -91,7 +91,7 @@ function renderGrid(rows) {
       ${mediaWithRating}
       <div class="card-title">${escapeHtml(row.title)}</div>
       <div class="card-meta">
-        ${row.categories && row.categories.length > 0 ? row.categories.map(cat => `<span class="category-tag">${escapeHtml(cat)}</span>`).join('') : ''}
+        ${(row.categories && Array.isArray(row.categories) && row.categories.length > 0) ? row.categories.map(cat => `<span class="category-tag">${escapeHtml(cat)}</span>`).join('') : ''}
         ${row.year ? `<span>${row.year}${(row.video_count > 0 || row.video_url) ? ' 🎥' : ''}</span>` : ''}
       </div>
     `;
@@ -394,7 +394,7 @@ function populateFilters(rows) {
   
   // Get all unique categories from the categories array
   const allCategories = rows
-    .flatMap(r => r.categories || [])
+    .flatMap(r => (r.categories && Array.isArray(r.categories)) ? r.categories : [])
     .filter(Boolean)
     .map(cat => cat.trim())
     .filter(Boolean);

@@ -100,25 +100,27 @@ def list_projects(
             JOIN categories c ON pc.category_id = c.id
             WHERE 1=1
         """
+        table_prefix = "p."
     else:
         query = "SELECT * FROM projects WHERE 1=1"
+        table_prefix = ""
     
     params: List[Any] = []
     if search:
-        query += " AND (p.title LIKE ? OR p.student_name LIKE ? OR p.description LIKE ?)"
+        query += f" AND ({table_prefix}title LIKE ? OR {table_prefix}student_name LIKE ? OR {table_prefix}description LIKE ?)"
         like = f"%{search}%"
         params.extend([like, like, like])
     if category:
         query += " AND c.name = ?"
         params.append(category)
     if year:
-        query += " AND p.year = ?"
+        query += f" AND {table_prefix}year = ?"
         params.append(year)
     if rating is not None:
-        query += " AND p.rating = ?"
+        query += f" AND {table_prefix}rating = ?"
         params.append(rating)
 
-    query += f" ORDER BY p.{sort_by} {order}"
+    query += f" ORDER BY {table_prefix}{sort_by} {order}"
 
     with get_connection() as connection:
         cursor = connection.cursor()
@@ -143,7 +145,9 @@ def list_projects(
             project["thumbnail_image"] = thumb_row["filename"] if thumb_row else None
             
             # Get categories for this project
-            project["categories"] = get_project_categories(project["id"])
+            categories = get_project_categories(project["id"])
+            project["categories"] = categories if categories else []
+            print(f"DEBUG: Project {project['id']} categories: {project['categories']}")
             
             if project["thumbnail_image"] is None and project["video_count"] > 0:
                 vrow = cursor.execute(
