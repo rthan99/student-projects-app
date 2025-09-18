@@ -45,13 +45,8 @@ def list_projects(
         like = f"%{search}%"
         params.extend([like, like, like])
     if category:
-        query += " AND (category = ? OR category LIKE ? OR category LIKE ? OR category LIKE ?)"
-        params.extend([
-            category,  # Exact match
-            f"{category},%",  # Category at start of comma-separated list
-            f"%,{category},%",  # Category in middle of comma-separated list
-            f"%,{category}"  # Category at end of comma-separated list
-        ])
+        query += " AND category = ?"
+        params.append(category)
     if year:
         query += " AND year = ?"
         params.append(year)

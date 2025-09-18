@@ -384,27 +384,30 @@ function setupFilters() {
 
 function populateFilters(rows) {
   const yearSel = document.getElementById('year');
-  const catSel = document.getElementById('category');
-  if (!yearSel || !catSel) return;
+  const catInput = document.getElementById('category');
+  const catDatalist = document.getElementById('category-options');
+  if (!yearSel || !catInput || !catDatalist) return;
   const prevYear = yearSel.value;
-  const prevCat = catSel.value;
+  const prevCat = catInput.value;
 
   const years = Array.from(new Set(rows.map(r => r.year).filter(Boolean))).sort();
   
-  // Split comma-separated categories and flatten them
+  // Get all unique categories (single categories, not comma-separated)
   const allCategories = rows
     .map(r => r.category)
     .filter(Boolean)
-    .flatMap(category => category.split(',').map(cat => cat.trim()))
+    .map(cat => cat.trim())
     .filter(Boolean);
   
   const cats = Array.from(new Set(allCategories)).sort((a,b)=>a.localeCompare(b));
 
   yearSel.innerHTML = '<option value="">All Years</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
-  catSel.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  
+  // Populate datalist with existing categories
+  catDatalist.innerHTML = cats.map(c => `<option value="${escapeHtml(c)}">`).join('');
 
   if (prevYear && years.includes(Number(prevYear))) yearSel.value = prevYear;
-  if (prevCat && cats.includes(prevCat)) catSel.value = prevCat;
+  if (prevCat && cats.includes(prevCat)) catInput.value = prevCat;
 }
 
 function showRandomProjects() {
@@ -446,6 +449,42 @@ function setupCreate() {
   
   // Listen for input changes
   titleInput.addEventListener('input', updateButtonState);
+  
+  // Setup category autocomplete for create form
+  const createCategoryInput = document.getElementById('new_category');
+  if (createCategoryInput) {
+    // Create a datalist for autocomplete
+    const createDatalist = document.createElement('datalist');
+    createDatalist.id = 'create-category-options';
+    createCategoryInput.setAttribute('list', 'create-category-options');
+    createCategoryInput.parentNode.appendChild(createDatalist);
+    
+    // Update datalist when projects are loaded
+    function updateCreateCategoryOptions() {
+      if (state.allProjects) {
+        const categories = Array.from(new Set(
+          state.allProjects
+            .map(p => p.category)
+            .filter(Boolean)
+            .map(cat => cat.trim())
+        )).sort();
+        
+        createDatalist.innerHTML = categories.map(cat => 
+          `<option value="${escapeHtml(cat)}">`
+        ).join('');
+      }
+    }
+    
+    // Update options when projects are fetched
+    const originalFetchProjects = fetchProjects;
+    fetchProjects = async function() {
+      await originalFetchProjects();
+      updateCreateCategoryOptions();
+    };
+    
+    // Initial update
+    updateCreateCategoryOptions();
+  }
   
   // Initial state
   updateButtonState();
@@ -578,6 +617,26 @@ function showProjectModal(project) {
   document.querySelector('.close-modal').addEventListener('click', () => {
     document.querySelector('.modal-overlay').remove();
   });
+
+  // Setup category autocomplete for edit modal
+  const editCategoryInput = document.getElementById('edit_category');
+  if (editCategoryInput && state.allProjects) {
+    const editDatalist = document.createElement('datalist');
+    editDatalist.id = 'edit-category-options';
+    editCategoryInput.setAttribute('list', 'edit-category-options');
+    editCategoryInput.parentNode.appendChild(editDatalist);
+    
+    const categories = Array.from(new Set(
+      state.allProjects
+        .map(p => p.category)
+        .filter(Boolean)
+        .map(cat => cat.trim())
+    )).sort();
+    
+    editDatalist.innerHTML = categories.map(cat => 
+      `<option value="${escapeHtml(cat)}">`
+    ).join('');
+  }
 
   // Setup star rating for edit modal
   const editRating = document.getElementById('edit_rating');
