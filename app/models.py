@@ -147,7 +147,6 @@ def list_projects(
             # Get categories for this project
             categories = get_project_categories(project["id"])
             project["categories"] = categories if categories else []
-            print(f"DEBUG: Project {project['id']} categories: {project['categories']}")
             
             if project["thumbnail_image"] is None and project["video_count"] > 0:
                 vrow = cursor.execute(
