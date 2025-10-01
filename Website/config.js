@@ -7,7 +7,7 @@ const CONFIG = {
   API_BASE_URL: '', // Empty string means relative URLs (same domain)
   
   // Legacy: Demo mode - kept for backward compatibility
-  DEMO_MODE: true,
+  DEMO_MODE: false,
   
   // Mock data for demo mode
   MOCK_DATA: {
