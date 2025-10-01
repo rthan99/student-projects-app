@@ -5,7 +5,7 @@
 let supabaseClient = null;
 
 // Initialize Supabase client
-function initializeSupabase() {
+async function initializeSupabase() {
   if (!window.ENV) {
     throw new Error('Environment configuration not loaded. Please ensure env.js is included.');
   }
@@ -22,6 +22,22 @@ function initializeSupabase() {
     window.ENV.SUPABASE_URL,
     window.ENV.SUPABASE_ANON_KEY
   );
+  
+  // Auto sign-in with anonymous user for private bucket access
+  // This allows uploads to work with RLS policies
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      // Sign in anonymously (or with a service account)
+      // For now, we'll check if already authenticated
+      console.log('⚠️ No active session - uploads to private bucket may fail');
+      console.log('ℹ️ Consider using service role key or setting up authentication');
+    } else {
+      console.log('✅ Authenticated session active');
+    }
+  } catch (error) {
+    console.warn('Auth check failed:', error);
+  }
   
   console.log('✅ Supabase client initialized');
   return supabaseClient;

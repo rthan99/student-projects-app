@@ -447,7 +447,7 @@ function populateFilters(rows) {
 
   // Populate curators
   const curators = Array.from(new Set(rows.map(r => r.curator).filter(Boolean))).sort();
-  curatorSel.innerHTML = '<option value="">All Curators</option>' + curators.map(c => `<option value="${c}">${c}</option>`).join('');
+  curatorSel.innerHTML = '<option value="">All Editors</option>' + curators.map(c => `<option value="${c}">${c}</option>`).join('');
   if (prevCurator && curators.includes(prevCurator)) curatorSel.value = prevCurator;
 }
 
@@ -1169,7 +1169,7 @@ function showProjectInfo(project, projectIndex = null) {
   
   if (project.curator) {
     html += `<div class="info-item">
-      <span class="info-label">Curator:</span>
+      <span class="info-label">Editor:</span>
       <span class="info-value curator-badge ${project.curator.toLowerCase()}">${escapeHtml(project.curator)}</span>
     </div>`;
   }

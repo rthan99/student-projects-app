@@ -65,7 +65,7 @@
             </select>
               
         <select id="curator" class="filter-select">
-          <option value="">All Curators</option>
+          <option value="">All Editors</option>
         </select>
         
         <select id="rating" class="filter-select">
@@ -208,9 +208,9 @@
               
               <div class="form-row">
                 <div class="form-group">
-                  <label for="new_curator" class="form-label">Curator</label>
+                  <label for="new_curator" class="form-label">Editor</label>
                   <select id="new_curator" class="form-input">
-                    <option value="">Select Curator</option>
+                    <option value="">Select Editor</option>
                     <option value="Jinke">Jinke</option>
                     <option value="Marije">Marije</option>
                     <option value="Katja">Katja</option>
@@ -363,12 +363,21 @@
                         <span id="modalYear"></span>
                       </div>
                       <div class="info-item">
-                        <label>Curator</label>
+                        <label>Editor</label>
                         <span id="modalCurator"></span>
                       </div>
                       <div class="info-item">
                         <label>Rating</label>
-                        <span id="modalRating"></span>
+                        <div class="modal-rating-container">
+                          <div id="modalRating" class="modal-rating-stars" data-project-id="">
+                            <span class="star" data-rating="1">★</span>
+                            <span class="star" data-rating="2">★</span>
+                            <span class="star" data-rating="3">★</span>
+                            <span class="star" data-rating="4">★</span>
+                            <span class="star" data-rating="5">★</span>
+                          </div>
+                          <button type="button" class="btn-clear-rating-modal" onclick="clearModalRating()" title="Clear rating">Clear</button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -427,6 +436,7 @@
                               <option value="3">Challenges</option>
                               <option value="4">Visitor experience</option>
                             </select>
+                            <div id="categoryDescription" class="category-description"></div>
                           </div>
                           <div class="form-group">
                             <label for="commentAuthor" class="form-label">Your Name</label>
@@ -477,9 +487,9 @@
                       <input id="edit_year" type="number" min="2000" max="2030" class="form-input" />
                     </div>
                     <div class="form-group">
-                      <label for="edit_curator" class="form-label">Curator</label>
+                      <label for="edit_curator" class="form-label">Editor</label>
                       <select id="edit_curator" class="form-input">
-                        <option value="">Select Curator</option>
+                        <option value="">Select Editor</option>
                         <option value="Dr. Smith">Dr. Smith</option>
                         <option value="Prof. Johnson">Prof. Johnson</option>
                         <option value="Ms. Davis">Ms. Davis</option>
@@ -494,12 +504,15 @@
                   <div class="form-grid">
                     <div class="form-group">
                       <label for="edit_rating" class="form-label">Rating</label>
-                      <div class="star-rating" id="edit_rating">
-                        <span class="star" data-rating="1">★</span>
-                        <span class="star" data-rating="2">★</span>
-                        <span class="star" data-rating="3">★</span>
-                        <span class="star" data-rating="4">★</span>
-                        <span class="star" data-rating="5">★</span>
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="star-rating" id="edit_rating">
+                          <span class="star" data-rating="1">★</span>
+                          <span class="star" data-rating="2">★</span>
+                          <span class="star" data-rating="3">★</span>
+                          <span class="star" data-rating="4">★</span>
+                          <span class="star" data-rating="5">★</span>
+                        </div>
+                        <button type="button" class="btn-clear-rating" onclick="clearEditRating()" title="Clear rating">Clear</button>
                       </div>
                     </div>
                   </div>
@@ -560,14 +573,14 @@
                   <div class="media-upload-section">
                     <div class="form-grid">
                       <div class="form-group">
-                        <label class="form-label">Upload New Image</label>
-                        <div class="media-upload-area">
+                        <label class="form-label">Upload New Images (Multiple)</label>
+                        <div class="media-upload-area" id="imageUploadArea">
                           <div class="upload-icon">🖼️</div>
                           <div class="upload-text">
-                            <strong>New Image File</strong>
-                            <span>Click to upload or drag & drop</span>
+                            <strong>Select Image Files</strong>
+                            <span>Click to upload or drag & drop multiple images</span>
                           </div>
-                          <input id="edit_new_image" type="file" accept="image/*" class="file-input" />
+                          <input id="edit_new_image" type="file" accept="image/*" class="file-input" multiple />
                         </div>
                         <div class="file-info" id="edit-image-info"></div>
                       </div>

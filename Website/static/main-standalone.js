@@ -361,7 +361,7 @@ function updateActiveFilters() {
   
   if (search) activeFilters.push({ type: 'search', value: search, label: `Search: "${search}"` });
   if (year) activeFilters.push({ type: 'year', value: year, label: `Year: ${year}` });
-  if (curator) activeFilters.push({ type: 'curator', value: curator, label: `Curator: ${curator}` });
+  if (curator) activeFilters.push({ type: 'curator', value: curator, label: `Editor: ${curator}` });
   if (rating) activeFilters.push({ type: 'rating', value: rating, label: `Rating: ${rating}+ stars` });
   
   // Check quick filters
@@ -551,7 +551,7 @@ function populateFilterOptions() {
   const curators = [...new Set(state.allProjects.map(p => p.curator).filter(Boolean))].sort();
   const curatorSelect = document.getElementById('curator');
   const currentCurator = curatorSelect.value;
-  curatorSelect.innerHTML = '<option value="">All Curators</option>' + 
+  curatorSelect.innerHTML = '<option value="">All Editors</option>' + 
     curators.map(curator => `<option value="${curator}" ${curator === currentCurator ? 'selected' : ''}>${curator}</option>`).join('');
 }
 
@@ -1002,12 +1002,15 @@ async function openProjectModal(projectId) {
     document.getElementById('projectDetailModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
     
-    // Setup comments event listener (only once)
-    const commentForm = document.getElementById('addCommentForm');
-    if (commentForm && !commentForm.hasAttribute('data-listener-added')) {
-      commentForm.addEventListener('submit', addComment);
-      commentForm.setAttribute('data-listener-added', 'true');
-    }
+  // Setup comments event listener (only once)
+  const commentForm = document.getElementById('addCommentForm');
+  if (commentForm && !commentForm.hasAttribute('data-listener-added')) {
+    commentForm.addEventListener('submit', addComment);
+    commentForm.setAttribute('data-listener-added', 'true');
+  }
+  
+  // Setup category description updater
+  setupCategoryDescription();
     
     // Make sure we're in view mode
     isEditMode = false;
@@ -1019,6 +1022,34 @@ async function openProjectModal(projectId) {
     console.error('Error loading project:', error);
     alert('Failed to load project details');
   }
+}
+
+// Helper function to convert video URL to embed code
+function getVideoEmbedHtml(url, maxHeight = '350px') {
+  // YouTube patterns
+  const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/;
+  const youtubeMatch = url.match(youtubeRegex);
+  
+  if (youtubeMatch) {
+    const videoId = youtubeMatch[1];
+    return `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; max-height: ${maxHeight}; height: 400px; border: 1px solid #e5e7eb;"></iframe>`;
+  }
+  
+  // Vimeo patterns
+  const vimeoRegex = /vimeo\.com\/(?:video\/)?(\d+)/;
+  const vimeoMatch = url.match(vimeoRegex);
+  
+  if (vimeoMatch) {
+    const videoId = vimeoMatch[1];
+    return `<iframe src="https://player.vimeo.com/video/${videoId}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="width: 100%; max-height: ${maxHeight}; height: 400px; border: 1px solid #e5e7eb;"></iframe>`;
+  }
+  
+  // If not YouTube or Vimeo, show link
+  return `
+    <div style="text-align: center; padding: 2rem;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">🎥</div>
+      <a href="${escapeHtml(url)}" target="_blank" class="btn btn-primary">Watch Video</a>
+    </div>`;
 }
 
 function populateProjectView(project) {
@@ -1040,11 +1071,31 @@ function populateProjectView(project) {
   
   // Display all videos from video_urls array
   if (project.video_urls && project.video_urls.length > 0) {
-    project.video_urls.forEach((videoUrl, index) => {
-      if (videoUrl.includes('/storage/v1/object/public/')) {
-        mediaHtml += `<video src="${escapeHtml(videoUrl)}" controls preload="metadata" style="width: 100%; margin-bottom: 1rem;"></video>`;
-      }
-    });
+    // If multiple videos, show in grid; if single, show full width
+    if (project.video_urls.length > 1) {
+      mediaHtml += '<div class="media-grid">';
+      project.video_urls.forEach((videoUrl, index) => {
+        if (videoUrl.includes('/storage/v1/object/public/')) {
+          // Uploaded video file
+          mediaHtml += `<video src="${escapeHtml(videoUrl)}" controls preload="metadata" style="width: 100%; max-height: 300px; object-fit: contain;"></video>`;
+        } else {
+          // External video (YouTube/Vimeo)
+          mediaHtml += getVideoEmbedHtml(videoUrl, '300px');
+        }
+      });
+      mediaHtml += '</div>';
+    } else {
+      // Single video - show full width
+      project.video_urls.forEach((videoUrl, index) => {
+        if (videoUrl.includes('/storage/v1/object/public/')) {
+          // Uploaded video file
+          mediaHtml += `<video src="${escapeHtml(videoUrl)}" controls preload="metadata" style="width: 100%; max-height: 350px; object-fit: contain; margin-bottom: 0.5rem;"></video>`;
+        } else {
+          // External video (YouTube/Vimeo)
+          mediaHtml += getVideoEmbedHtml(videoUrl, '350px');
+        }
+      });
+    }
   }
   
   // Display external video URL if present
@@ -1053,12 +1104,8 @@ function populateProjectView(project) {
       // Uploaded video
       mediaHtml += `<video src="${escapeHtml(project.video_url)}" controls preload="metadata" style="width: 100%;"></video>`;
     } else {
-      // External video URL
-      mediaHtml += `
-        <div style="text-align: center; padding: 2rem;">
-          <div style="font-size: 3rem; margin-bottom: 1rem;">🎥</div>
-          <a href="${escapeHtml(project.video_url)}" target="_blank" class="btn btn-primary">Watch Video</a>
-        </div>`;
+      // External video URL (YouTube/Vimeo embed)
+      mediaHtml += getVideoEmbedHtml(project.video_url, '400px');
     }
   }
   
@@ -1079,11 +1126,21 @@ function populateProjectView(project) {
   
   // Populate rating
   const ratingElement = document.getElementById('modalRating');
-  if (project.rating) {
-    ratingElement.innerHTML = '★'.repeat(project.rating) + '☆'.repeat(5 - project.rating);
-  } else {
-    ratingElement.textContent = 'Not rated';
+  ratingElement.setAttribute('data-project-id', project.id);
+  
+  // Clear all stars first
+  const stars = ratingElement.querySelectorAll('.star');
+  stars.forEach(star => star.classList.remove('active'));
+  
+  // Set active stars based on current rating
+  if (project.rating && project.rating > 0) {
+    for (let i = 0; i < project.rating; i++) {
+      stars[i].classList.add('active');
+    }
   }
+  
+  // Setup click handlers for rating stars
+  setupModalRatingHandlers();
   
   // Load comments for this project
   loadComments(project.id);
@@ -1091,7 +1148,9 @@ function populateProjectView(project) {
   // Populate description
   const descSection = document.getElementById('descriptionSection');
   if (project.description) {
-    document.getElementById('modalDescription').textContent = project.description;
+    // Convert line breaks to <br> tags for display
+    const descriptionWithBreaks = project.description.replace(/\n/g, '<br>');
+    document.getElementById('modalDescription').innerHTML = descriptionWithBreaks;
     descSection.style.display = 'block';
   } else {
     descSection.style.display = 'none';
@@ -1308,19 +1367,30 @@ function setupEditMediaUploads() {
   const imageArea = imageInput.parentElement;
   const videoArea = videoInput.parentElement;
   
-  // Image upload handling
+  // Image upload handling - supports multiple files
   imageInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      // Validate all files are images
+      const allImages = Array.from(files).every(file => file.type.startsWith('image/'));
+      if (!allImages) {
+        alert('Please select only image files');
         imageInput.value = '';
         return;
       }
-      const size = (file.size / 1024 / 1024).toFixed(2);
-      imageInfo.textContent = `${file.name} (${size} MB)`;
-      imageArea.style.borderColor = '#4ba254';
-      imageArea.style.background = '#f0fdf4';
+      
+      // Show file count and total size
+      const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0);
+      const sizeMB = (totalSize / 1024 / 1024).toFixed(2);
+      
+      if (files.length === 1) {
+        imageInfo.textContent = `${files[0].name} (${sizeMB} MB)`;
+      } else {
+        imageInfo.textContent = `${files.length} images selected (${sizeMB} MB total)`;
+      }
+      
+      imageArea.style.borderColor = '#1e293b';
+      imageArea.style.background = '#f5f5f5';
     } else {
       imageInfo.textContent = '';
       imageArea.style.borderColor = '#cbd5e1';
@@ -1540,33 +1610,39 @@ async function saveProjectChanges() {
     Object.assign(currentProject, updatedProject);
     
     // Handle new media uploads (add to existing media instead of replacing)
-    const newImageFile = document.getElementById('edit_new_image').files[0];
+    const newImageFiles = document.getElementById('edit_new_image').files;
     const newVideoFile = document.getElementById('edit_new_video').files[0];
     
-    if (newImageFile) {
+    if (newImageFiles && newImageFiles.length > 0) {
       try {
-        status.textContent = 'Uploading new image...';
+        const fileCount = newImageFiles.length;
+        status.textContent = `Uploading ${fileCount} image${fileCount > 1 ? 's' : ''}...`;
         
         if (config.MODE === 'supabase') {
-          // Add new image to the array (don't delete old ones)
-          const imageUrl = await window.supabaseAPI.uploadAndAddImage(newImageFile, currentProject.id);
-          
-          // Update local project data
+          // Upload all images to the array
           if (!currentProject.image_urls) {
             currentProject.image_urls = [];
           }
-          currentProject.image_urls.push(imageUrl);
           
-          console.log('New image uploaded and added:', imageUrl);
+          for (let i = 0; i < newImageFiles.length; i++) {
+            const file = newImageFiles[i];
+            status.textContent = `Uploading image ${i + 1} of ${fileCount}...`;
+            const imageUrl = await window.supabaseAPI.uploadAndAddImage(file, currentProject.id);
+            currentProject.image_urls.push(imageUrl);
+            console.log(`Image ${i + 1}/${fileCount} uploaded:`, imageUrl);
+          }
+          
+          console.log(`All ${fileCount} images uploaded successfully`);
         } else {
-          // API mode upload
-          const imageFormData = new FormData();
-          imageFormData.append('file', newImageFile);
-          
-          await apiCall(`/api/projects/${currentProject.id}/upload/image`, {
-            method: 'POST',
-            body: imageFormData
-          });
+          // API mode upload - upload each file
+          for (let i = 0; i < newImageFiles.length; i++) {
+            const imageFormData = new FormData();
+            imageFormData.append('file', newImageFiles[i]);
+            await apiCall(`/api/projects/${currentProject.id}/upload/image`, {
+              method: 'POST',
+              body: imageFormData
+            });
+          }
         }
       } catch (uploadError) {
         console.error('Image upload failed:', uploadError);
@@ -2078,6 +2154,155 @@ async function removeVideoFromProject(videoUrl) {
   }
 }
 
+// Clear rating in edit mode
+function clearEditRating() {
+  const editStars = document.querySelectorAll('#edit_rating .star');
+  editStars.forEach(star => {
+    star.classList.remove('active');
+  });
+}
+
+// Delete current project from edit modal
+async function deleteCurrentProject() {
+  if (!currentProject) {
+    alert('No project selected');
+    return;
+  }
+  
+  if (!confirm(`Are you sure you want to delete "${currentProject.title}"? This action cannot be undone.`)) {
+    return;
+  }
+  
+  try {
+    // Use supabaseAPI to delete
+    await window.supabaseAPI.deleteProject(currentProject.id);
+    
+    // Close modal
+    closeProjectModal();
+    
+    // Refresh the project list
+    if (typeof fetchProjects === 'function') {
+      await fetchProjects();
+    }
+    
+    alert('Project deleted successfully!');
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    alert(`Failed to delete project: ${error.message}`);
+  }
+}
+
+// Setup category description functionality
+function setupCategoryDescription() {
+  const categorySelect = document.getElementById('commentCategory');
+  const descriptionDiv = document.getElementById('categoryDescription');
+  
+  if (!categorySelect || !descriptionDiv) return;
+  
+  const descriptions = {
+    '1': 'Share your thoughts about the type of exhibition, its format, presentation style, or display approach.',
+    '2': 'Describe potential opportunities this project creates, future applications, or areas for expansion.',
+    '3': 'Discuss challenges faced during development, technical difficulties, or areas that need improvement.',
+    '4': 'Comment on the visitor experience, usability, accessibility, or how people interact with the project.'
+  };
+  
+  function updateDescription() {
+    const selectedValue = categorySelect.value;
+    if (selectedValue && descriptions[selectedValue]) {
+      descriptionDiv.textContent = descriptions[selectedValue];
+      descriptionDiv.style.display = 'flex';
+    } else {
+      descriptionDiv.textContent = '';
+      descriptionDiv.style.display = 'none';
+    }
+  }
+  
+  // Update on change
+  categorySelect.addEventListener('change', updateDescription);
+  
+  // Initial update
+  updateDescription();
+}
+
+// Setup modal rating functionality
+function setupModalRatingHandlers() {
+  const ratingElement = document.getElementById('modalRating');
+  if (!ratingElement) return;
+  
+  const stars = ratingElement.querySelectorAll('.star');
+  
+  // Remove existing event listeners to prevent duplicates
+  stars.forEach(star => {
+    star.removeEventListener('click', handleStarClick);
+    star.addEventListener('click', handleStarClick);
+  });
+  
+  function handleStarClick(event) {
+    const clickedRating = parseInt(event.target.getAttribute('data-rating'));
+    const projectId = ratingElement.getAttribute('data-project-id');
+    
+    if (!projectId) return;
+    
+    // Update visual display
+    stars.forEach((star, index) => {
+      if (index < clickedRating) {
+        star.classList.add('active');
+      } else {
+        star.classList.remove('active');
+      }
+    });
+    
+    // Update project rating in database
+    updateProjectRating(projectId, clickedRating);
+  }
+}
+
+// Update project rating
+async function updateProjectRating(projectId, rating) {
+  try {
+    // Update current project data
+    if (currentProject && currentProject.id == projectId) {
+      currentProject.rating = rating;
+    }
+    
+    // Update in database
+    await window.supabaseAPI.updateProject(projectId, { rating: rating });
+    
+    console.log(`Rating updated to ${rating} stars for project ${projectId}`);
+  } catch (error) {
+    console.error('Error updating rating:', error);
+    alert('Failed to update rating. Please try again.');
+  }
+}
+
+// Clear modal rating
+async function clearModalRating() {
+  const ratingElement = document.getElementById('modalRating');
+  if (!ratingElement) return;
+  
+  const projectId = ratingElement.getAttribute('data-project-id');
+  if (!projectId) return;
+  
+  try {
+    // Clear visual display
+    const stars = ratingElement.querySelectorAll('.star');
+    stars.forEach(star => star.classList.remove('active'));
+    
+    // Update current project data
+    if (currentProject && currentProject.id == projectId) {
+      currentProject.rating = 0;
+    }
+    
+    // Update in database
+    await window.supabaseAPI.updateProject(projectId, { rating: 0 });
+    
+    console.log(`Rating cleared for project ${projectId}`);
+  } catch (error) {
+    console.error('Error clearing rating:', error);
+    alert('Failed to clear rating. Please try again.');
+  }
+}
+
 // Expose functions to window for inline onclick handlers
 window.openProjectModal = openProjectModal;
 window.closeProjectModal = closeProjectModal;
@@ -2085,3 +2310,6 @@ window.toggleEditMode = toggleEditMode;
 window.showLightbox = showLightbox;
 window.removeImageFromProject = removeImageFromProject;
 window.removeVideoFromProject = removeVideoFromProject;
+window.clearEditRating = clearEditRating;
+window.deleteCurrentProject = deleteCurrentProject;
+window.clearModalRating = clearModalRating;
