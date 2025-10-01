@@ -1258,44 +1258,46 @@ async function populateEditForm(project) {
 }
 
 function populateCurrentMedia(project) {
-  const imageSection = document.getElementById('currentImageSection');
-  const videoSection = document.getElementById('currentVideoSection');
+  const currentMediaSection = document.getElementById('currentMediaSection');
   
-  // Show current images if they exist
+  if (!currentMediaSection) {
+    console.warn('Current media section not found');
+    return;
+  }
+  
+  let mediaHtml = '';
+  
+  // Show all current images
   if (project.image_urls && project.image_urls.length > 0) {
-    const imagePreview = document.getElementById('currentImagePreview');
-    // Show first image as preview (or could show all in a grid)
-    imagePreview.src = project.image_urls[0];
-    imageSection.style.display = 'block';
-    
-    // Add info about multiple images if applicable
-    if (project.image_urls.length > 1) {
-      const imageCount = document.createElement('div');
-      imageCount.textContent = `+${project.image_urls.length - 1} more image(s)`;
-      imageCount.style.cssText = 'font-size: 0.875rem; color: #64748b; margin-top: 0.5rem;';
-      imageSection.appendChild(imageCount);
-    }
-  } else {
-    imageSection.style.display = 'none';
+    mediaHtml += '<div class="current-media-group"><h4>Current Images (' + project.image_urls.length + ')</h4><div class="current-media-grid">';
+    project.image_urls.forEach((imageUrl, index) => {
+      mediaHtml += `
+        <div class="current-media-item">
+          <img src="${escapeHtml(imageUrl)}" alt="Image ${index + 1}" style="max-width: 150px; max-height: 100px; object-fit: cover; border: 1px solid #e5e7eb;" />
+          <button type="button" class="media-remove-btn" onclick="removeImageFromProject('${escapeHtml(imageUrl)}')" title="Remove">×</button>
+        </div>`;
+    });
+    mediaHtml += '</div></div>';
   }
   
-  // Show current videos if they exist
+  // Show all current videos
   if (project.video_urls && project.video_urls.length > 0) {
-    const videoPreview = document.getElementById('currentVideoPreview');
-    // Show first video as preview
-    videoPreview.src = project.video_urls[0];
-    videoSection.style.display = 'block';
-    
-    // Add info about multiple videos if applicable
-    if (project.video_urls.length > 1) {
-      const videoCount = document.createElement('div');
-      videoCount.textContent = `+${project.video_urls.length - 1} more video(s)`;
-      videoCount.style.cssText = 'font-size: 0.875rem; color: #64748b; margin-top: 0.5rem;';
-      videoSection.appendChild(videoCount);
-    }
-  } else {
-    videoSection.style.display = 'none';
+    mediaHtml += '<div class="current-media-group"><h4>Current Videos (' + project.video_urls.length + ')</h4><div class="current-media-grid">';
+    project.video_urls.forEach((videoUrl, index) => {
+      mediaHtml += `
+        <div class="current-media-item">
+          <video src="${escapeHtml(videoUrl)}" controls style="max-width: 150px; max-height: 100px; border: 1px solid #e5e7eb;"></video>
+          <button type="button" class="media-remove-btn" onclick="removeVideoFromProject('${escapeHtml(videoUrl)}')" title="Remove">×</button>
+        </div>`;
+    });
+    mediaHtml += '</div></div>';
   }
+  
+  if (!mediaHtml) {
+    mediaHtml = '<div class="no-media-message">No media files yet. Upload images or videos below.</div>';
+  }
+  
+  currentMediaSection.innerHTML = mediaHtml;
 }
 
 function setupEditMediaUploads() {
@@ -2032,8 +2034,54 @@ function showLightbox(imageUrl) {
   document.body.appendChild(lightboxOverlay);
 }
 
+// Remove image from project
+async function removeImageFromProject(imageUrl) {
+  if (!currentProject) return;
+  
+  if (!confirm('Remove this image?')) return;
+  
+  try {
+    await window.supabaseAPI.removeImageFromProject(currentProject.id, imageUrl);
+    
+    // Update local project data
+    currentProject.image_urls = currentProject.image_urls.filter(url => url !== imageUrl);
+    
+    // Refresh the media display
+    populateCurrentMedia(currentProject);
+    
+    alert('Image removed successfully!');
+  } catch (error) {
+    console.error('Error removing image:', error);
+    alert('Failed to remove image: ' + error.message);
+  }
+}
+
+// Remove video from project
+async function removeVideoFromProject(videoUrl) {
+  if (!currentProject) return;
+  
+  if (!confirm('Remove this video?')) return;
+  
+  try {
+    await window.supabaseAPI.removeVideoFromProject(currentProject.id, videoUrl);
+    
+    // Update local project data
+    currentProject.video_urls = currentProject.video_urls.filter(url => url !== videoUrl);
+    
+    // Refresh the media display
+    populateCurrentMedia(currentProject);
+    
+    alert('Video removed successfully!');
+  } catch (error) {
+    console.error('Error removing video:', error);
+    alert('Failed to remove video: ' + error.message);
+  }
+}
+
 // Expose functions to window for inline onclick handlers
 window.openProjectModal = openProjectModal;
 window.closeProjectModal = closeProjectModal;
 window.toggleEditMode = toggleEditMode;
 window.showLightbox = showLightbox;
+window.removeImageFromProject = removeImageFromProject;
+window.removeVideoFromProject = removeVideoFromProject;

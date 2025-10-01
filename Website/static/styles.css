@@ -3419,6 +3419,64 @@ button:disabled { cursor: not-allowed; opacity: 0.6; transform: none; }
   gap: 1rem;
 }
 
+.current-media-group {
+  margin-bottom: 1.5rem;
+}
+
+.current-media-group h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.current-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.current-media-item {
+  position: relative;
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  background: #ffffff;
+}
+
+.media-remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e5e7eb;
+  color: #64748b;
+  font-size: 1.25rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.media-remove-btn:hover {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+.no-media-message {
+  color: #64748b;
+  font-size: 0.9rem;
+  padding: 1rem;
+  text-align: center;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+}
+
 .media-item {
   margin-bottom: 0;
   padding: 0.75rem;
