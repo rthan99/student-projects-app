@@ -980,6 +980,12 @@ async function openProjectModal(projectId) {
   console.log('Opening project modal for ID:', projectId);
   
   try {
+    // Clear any previous comments FIRST
+    const commentsList = document.getElementById('commentsList');
+    if (commentsList) {
+      commentsList.innerHTML = '<div class="comments-loading">Loading comments...</div>';
+    }
+    
     // Fetch project details
     currentProject = await window.supabaseAPI.getProject(projectId);
     if (!currentProject) {
@@ -1645,29 +1651,49 @@ async function loadComments(projectId) {
     return;
   }
   
-  if (!commentsLoading) {
-    console.error('Comments loading element not found');
-    return;
-  }
+  // commentsLoading is optional - we can work without it
   
   try {
-    commentsLoading.style.display = 'flex';
+    // Clear comments list completely first
     commentsList.innerHTML = '';
-    commentsList.appendChild(commentsLoading);
     
+    if (commentsLoading) {
+      commentsLoading.style.display = 'flex';
+      commentsList.appendChild(commentsLoading);
+    }
+    
+    console.log('🔍 Loading comments for project ID:', projectId);
     const comments = await window.supabaseAPI.getComments(projectId);
+    console.log('📝 Received', comments.length, 'comments for project', projectId);
     
-    commentsLoading.style.display = 'none';
+    if (commentsLoading) {
+      commentsLoading.style.display = 'none';
+    }
     
-    if (comments.length === 0) {
+    // Clear again before rendering to ensure no old data
+    commentsList.innerHTML = '';
+    
+    if (!comments || comments.length === 0) {
       commentsList.innerHTML = '<div class="comments-empty">No comments yet. Be the first to comment!</div>';
       return;
     }
     
-    commentsList.innerHTML = comments.map(comment => createCommentHTML(comment)).join('');
+    // Render only comments that match this project
+    const projectComments = comments.filter(c => c.project_id === parseInt(projectId));
+    console.log('✓ Filtered to', projectComments.length, 'comments for this specific project');
+    
+    if (projectComments.length === 0) {
+      commentsList.innerHTML = '<div class="comments-empty">No comments yet. Be the first to comment!</div>';
+      commentsList.setAttribute('data-project-id', projectId);
+      return;
+    }
+    
+    // Set the project ID on the comments list to track which project's comments are shown
+    commentsList.setAttribute('data-project-id', projectId);
+    commentsList.innerHTML = projectComments.map(comment => createCommentHTML(comment)).join('');
     
     // Add delete event listeners
-    commentsList.querySelectorAll('.comment-delete').forEach(button => {
+    commentsList.querySelectorAll('.comment-delete-icon').forEach(button => {
       button.addEventListener('click', function() {
         const commentId = this.dataset.commentId;
         deleteComment(commentId);
@@ -1675,32 +1701,37 @@ async function loadComments(projectId) {
     });
     
   } catch (error) {
-    console.error('Error loading comments:', error);
-    commentsLoading.style.display = 'none';
+    console.error('❌ Error loading comments:', error);
+    if (commentsLoading) {
+      commentsLoading.style.display = 'none';
+    }
     commentsList.innerHTML = '<div class="comments-empty">Error loading comments. Please try again.</div>';
   }
 }
 
 function createCommentHTML(comment) {
-  const date = new Date(comment.created_at).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  // Map category numbers to names
+  const categoryNames = {
+    '1': 'Exhibition type',
+    '2': 'Opportunities',
+    '3': 'Challenges',
+    '4': 'Visitor experience'
+  };
+  
+  const categoryName = categoryNames[comment.category] || `Category ${comment.category}`;
   
   return `
     <div class="comment-item">
-      <div class="comment-header">
-        <div class="comment-meta">
-          <span class="comment-category">Category ${comment.category}</span>
-          <span class="comment-author">${escapeHtml(comment.author)}</span>
-          <span class="comment-date">${date}</span>
+      <div class="comment-item-header">
+        <div class="comment-category-badge">${categoryName}</div>
+        <div class="comment-meta-right">
+          <span class="comment-author-small">${escapeHtml(comment.author)}</span>
+          <button class="comment-delete-icon" data-comment-id="${comment.id}" title="Delete">×</button>
         </div>
-        <button class="comment-delete" data-comment-id="${comment.id}">Delete</button>
       </div>
-      <p class="comment-text">${escapeHtml(comment.comment_text || comment.text)}</p>
+      <div class="comment-body">
+        <p class="comment-text">${escapeHtml(comment.comment_text || comment.text)}</p>
+      </div>
     </div>
   `;
 }
@@ -1762,17 +1793,21 @@ async function addComment(event) {
   
   try {
     const commentData = { category, author, text };
-    await window.supabaseAPI.addComment(currentProject.id, commentData);
+    console.log('💬 Adding comment to project:', currentProject.id, commentData);
     
-    // Clear form
+    const newComment = await window.supabaseAPI.addComment(currentProject.id, commentData);
+    console.log('✓ Comment added successfully:', newComment);
+    
+    // Clear form first
     document.getElementById('addCommentForm').reset();
     
-    // Show success
-    status.className = 'form-status success';
-    status.textContent = 'Comment posted successfully!';
-    
-    // Reload comments
+    // Immediately reload comments to show the new one
+    console.log('🔄 Reloading comments...');
     await loadComments(currentProject.id);
+    
+    // Show success message
+    status.className = 'form-status success';
+    status.textContent = '✓ Comment posted and visible below!';
     
     // Clear status after 3 seconds
     setTimeout(() => {
@@ -1781,10 +1816,11 @@ async function addComment(event) {
     }, 3000);
     
   } catch (error) {
-    console.error('Error adding comment:', error);
+    console.error('❌ Error adding comment:', error);
     status.className = 'form-status error';
     status.textContent = `Failed to post comment: ${error.message}`;
   } finally {
+    // Re-enable button
     submitBtn.innerHTML = '<span class="btn-icon">💬</span> Post Comment';
     submitBtn.disabled = false;
   }
