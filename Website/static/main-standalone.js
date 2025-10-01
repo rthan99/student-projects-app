@@ -253,8 +253,8 @@ function applyFilters(projects) {
   // Apply search filter
   if (search) {
     filtered = filtered.filter(project => 
-      project.title.toLowerCase().includes(search) ||
-      project.student_name.toLowerCase().includes(search) ||
+      (project.title && project.title.toLowerCase().includes(search)) ||
+      (project.student_name && project.student_name.toLowerCase().includes(search)) ||
       (project.description && project.description.toLowerCase().includes(search)) ||
       (project.tags && project.tags.toLowerCase().includes(search))
     );
@@ -1676,7 +1676,7 @@ async function loadComments(projectId) {
     commentsList.innerHTML = '';
     
     if (!comments || comments.length === 0) {
-      commentsList.innerHTML = '<div class="comments-empty">No comments yet. Be the first to comment!</div>';
+      commentsList.innerHTML = '<div class="comments-empty">Please leave your thoughts and feedback on this project and how it can be integrated (or not) at NEMO</div>';
       return;
     }
     
@@ -1685,7 +1685,7 @@ async function loadComments(projectId) {
     console.log('✓ Filtered to', projectComments.length, 'comments for this specific project');
     
     if (projectComments.length === 0) {
-      commentsList.innerHTML = '<div class="comments-empty">No comments yet. Be the first to comment!</div>';
+      commentsList.innerHTML = '<div class="comments-empty">Please leave your thoughts and feedback on this project and how it can be integrated (or not) at NEMO</div>';
       commentsList.setAttribute('data-project-id', projectId);
       return;
     }
