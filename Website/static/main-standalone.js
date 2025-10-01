@@ -773,7 +773,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Show demo mode indicator
   if (config.DEMO_MODE) {
     const header = document.querySelector('h1');
-    header.innerHTML += '<div style="font-size: 14px; color: rgba(255,255,255,0.8); font-weight: normal;">Demo Mode - Using Sample Data</div>';
+    header.innerHTML += '<div style="font-size: 14px; color: rgba(255,255,255,0.8); font-weight: normal;"></div>';
   }
   
   // Event listeners
