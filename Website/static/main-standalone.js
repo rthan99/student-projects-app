@@ -1033,7 +1033,7 @@ function populateProjectView(project) {
   if (project.image_urls && project.image_urls.length > 0) {
     mediaHtml += '<div class="media-grid">';
     project.image_urls.forEach((imageUrl, index) => {
-      mediaHtml += `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(project.title)} - Image ${index + 1}" />`;
+      mediaHtml += `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(project.title)} - Image ${index + 1}" onclick="showLightbox('${escapeHtml(imageUrl)}')" style="cursor: pointer;" />`;
     });
     mediaHtml += '</div>';
   }
@@ -2018,3 +2018,22 @@ async function getGalleryStatistics() {
   }
 }
 
+// Lightbox function for full-screen image viewing
+function showLightbox(imageUrl) {
+  const lightboxOverlay = document.createElement('div');
+  lightboxOverlay.className = 'lightbox';
+  lightboxOverlay.innerHTML = `<img src="${imageUrl}" alt="Full size image" />`;
+  
+  // Close on click
+  lightboxOverlay.addEventListener('click', () => {
+    lightboxOverlay.remove();
+  });
+  
+  document.body.appendChild(lightboxOverlay);
+}
+
+// Expose functions to window for inline onclick handlers
+window.openProjectModal = openProjectModal;
+window.closeProjectModal = closeProjectModal;
+window.toggleEditMode = toggleEditMode;
+window.showLightbox = showLightbox;
