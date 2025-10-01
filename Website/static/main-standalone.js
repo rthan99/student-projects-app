@@ -1033,7 +1033,7 @@ function populateProjectView(project) {
   if (project.image_urls && project.image_urls.length > 0) {
     mediaHtml += '<div class="media-grid">';
     project.image_urls.forEach((imageUrl, index) => {
-      mediaHtml += `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(project.title)} - Image ${index + 1}" onclick="showLightbox('${escapeHtml(imageUrl)}')" style="cursor: pointer;" />`;
+      mediaHtml += `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(project.title)} - Image ${index + 1}" />`;
     });
     mediaHtml += '</div>';
   }
