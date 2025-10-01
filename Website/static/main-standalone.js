@@ -2303,6 +2303,11 @@ async function clearModalRating() {
   }
 }
 
+// Open Instructions PDF
+function openInstructions() {
+  window.open('Instructions_MusealeZaken.pdf', '_blank');
+}
+
 // Expose functions to window for inline onclick handlers
 window.openProjectModal = openProjectModal;
 window.closeProjectModal = closeProjectModal;
@@ -2313,3 +2318,4 @@ window.removeVideoFromProject = removeVideoFromProject;
 window.clearEditRating = clearEditRating;
 window.deleteCurrentProject = deleteCurrentProject;
 window.clearModalRating = clearModalRating;
+window.openInstructions = openInstructions;
