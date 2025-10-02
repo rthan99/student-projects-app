@@ -2200,10 +2200,10 @@ function setupCategoryDescription() {
   if (!categorySelect || !descriptionDiv) return;
   
   const descriptions = {
-    '1': 'Share your thoughts about the type of exhibition, its format, presentation style, or display approach.',
+    '1': 'Share in which type of exhibition, format, presentation style, or display approach this project fits best. E.g. Display case, Experiment, Technium 2028, Fenomena etc.',
     '2': 'Describe potential opportunities this project creates, future applications, or areas for expansion.',
-    '3': 'Discuss challenges faced during development, technical difficulties, or areas that need improvement.',
-    '4': 'Comment on the visitor experience, usability, accessibility, or how people interact with the project.'
+    '3': 'Could there be any challenges in creating this project?',
+    '4': 'Which values of the Visitor Experience taxonomy do you think are most important for this project? [Kennis & Inizicht, Onderzoeken & Ontwerpen, Reflecteren, Opwinding & Inspiratie, Identificeren met wetenschap, Deelnemen aan onderzoerk]'
   };
   
   function updateDescription() {
