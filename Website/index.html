@@ -683,11 +683,23 @@
     <script src="static/gallery-media-client.js"></script>
     <script src="static/main-standalone.js"></script>
     
-    <!-- Vercel Analytics -->
+    <!-- Analytics -->
     <script>
-      window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+      // Vercel Analytics (only works on Vercel)
+      if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('vercel.com')) {
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+        const script = document.createElement('script');
+        script.defer = true;
+        script.src = '/_vercel/insights/script.js';
+        document.head.appendChild(script);
+      }
+      
+      // Google Analytics (works everywhere)
+      // Replace 'GA_MEASUREMENT_ID' with your actual Google Analytics ID
+      // window.gtag = window.gtag || function() { (window.dataLayer = window.dataLayer || []).push(arguments); };
+      // gtag('js', new Date());
+      // gtag('config', 'GA_MEASUREMENT_ID');
     </script>
-    <script defer src="/_vercel/insights/script.js"></script>
   </body>
 </html>
 
