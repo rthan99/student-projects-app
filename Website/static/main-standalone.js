@@ -1873,7 +1873,7 @@ async function loadComments(projectId) {
 }
 
 function createCommentHTML(comment) {
-  // Map category numbers to names
+  // Map category numbers to names and CSS classes
   const categoryNames = {
     '1': 'Exhibition type',
     '2': 'Opportunities',
@@ -1882,12 +1882,21 @@ function createCommentHTML(comment) {
     '5': 'Open Comment'
   };
   
+  const categoryClasses = {
+    '1': 'category-exhibition',
+    '2': 'category-opportunities',
+    '3': 'category-challenges',
+    '4': 'category-visitor',
+    '5': 'category-open'
+  };
+  
   const categoryName = categoryNames[comment.category] || `Category ${comment.category}`;
+  const categoryClass = categoryClasses[comment.category] || 'category-default';
   
   return `
     <div class="comment-item">
       <div class="comment-item-header">
-        <div class="comment-category-badge">${categoryName}</div>
+        <div class="comment-category-badge ${categoryClass}">${categoryName}</div>
         <div class="comment-meta-right">
           <span class="comment-author-small">${escapeHtml(comment.author)}</span>
           <button class="comment-delete-icon" data-comment-id="${comment.id}" title="Delete">×</button>

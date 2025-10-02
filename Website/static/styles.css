@@ -3987,7 +3987,51 @@ button:disabled { cursor: not-allowed; opacity: 0.6; transform: none; }
   font-weight: 600 !important;
   color: #1e293b !important;
   font-size: 0.95rem !important;
-  flex: 1 1 auto !important;
+  flex: 0 0 auto !important;
+  background: #f1f5f9 !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  border: 1px solid #e2e8f0 !important;
+  display: inline-block !important;
+  text-align: left !important;
+  width: auto !important;
+}
+
+/* Comment category color coding */
+.comment-category-badge.category-exhibition {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fbbf24 !important;
+}
+
+.comment-category-badge.category-opportunities {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+  border-color: #10b981 !important;
+}
+
+.comment-category-badge.category-challenges {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #f87171 !important;
+}
+
+.comment-category-badge.category-visitor {
+  background: #e0e7ff !important;
+  color: #3730a3 !important;
+  border-color: #818cf8 !important;
+}
+
+.comment-category-badge.category-open {
+  background: #f3e8ff !important;
+  color: #6b21a8 !important;
+  border-color: #a78bfa !important;
+}
+
+.comment-category-badge.category-default {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
 }
 
 .comment-meta-right {
