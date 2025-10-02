@@ -1,0 +1,18 @@
+{
+  "name": "student-projects-app",
+  "version": "1.0.0",
+  "description": "Student Projects Application",
+  "main": "index.js",
+  "scripts": {
+    "dev": "echo 'Static site - no build process needed'",
+    "build": "echo 'Static site - no build process needed'",
+    "start": "echo 'Static site - serve with any static server'"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.3.1"
+  },
+  "devDependencies": {},
+  "keywords": ["student", "projects", "portfolio"],
+  "author": "Nathan Pottier",
+  "license": "MIT"
+}
