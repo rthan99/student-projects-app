@@ -1793,7 +1793,8 @@ function createCommentHTML(comment) {
     '1': 'Exhibition type',
     '2': 'Opportunities',
     '3': 'Challenges',
-    '4': 'Visitor experience'
+    '4': 'Visitor experience',
+    '5': 'Open Comment'
   };
   
   const categoryName = categoryNames[comment.category] || `Category ${comment.category}`;
@@ -2203,7 +2204,8 @@ function setupCategoryDescription() {
     '1': 'Share in which type of exhibition, format, presentation style, or display approach this project fits best. E.g. Display case, Experiment, Technium 2028, Fenomena etc.',
     '2': 'Describe potential opportunities this project creates, future applications, or areas for expansion.',
     '3': 'Could there be any challenges in creating this project?',
-    '4': 'Which values of the Visitor Experience taxonomy do you think are most important for this project? [Kennis & Inizicht, Onderzoeken & Ontwerpen, Reflecteren, Opwinding & Inspiratie, Identificeren met wetenschap, Deelnemen aan onderzoerk]'
+    '4': 'Which values of the Visitor Experience taxonomy do you think are most important for this project? [Kennis & Inizicht, Onderzoeken & Ontwerpen, Reflecteren, Opwinding & Inspiratie, Identificeren met wetenschap, Deelnemen aan onderzoerk]',
+    '5': 'Share any general thoughts, feedback, or observations about this project that don\'t fit into the other categories.'
   };
   
   function updateDescription() {
