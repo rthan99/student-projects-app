@@ -766,6 +766,9 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('Environment loaded:', !!window.ENV);
   console.log('Supabase loaded:', !!window.supabase);
   
+  // Initialize keyboard navigation
+  setupKeyboardNavigation();
+  
   // Initialize
   console.log('Initializing application...');
   fetchProjects();
@@ -975,6 +978,8 @@ function setupDragAndDrop(area, input, info) {
 // Project Modal Functions
 let currentProject = null;
 let isEditMode = false;
+let currentProjectIndex = -1;
+let currentProjectList = [];
 
 async function openProjectModal(projectId) {
   console.log('Opening project modal for ID:', projectId);
@@ -994,6 +999,9 @@ async function openProjectModal(projectId) {
     }
     
     console.log('Loaded project:', currentProject);
+    
+    // Set up navigation context
+    setupProjectNavigation(projectId);
     
     // Populate view mode
     populateProjectView(currentProject);
@@ -1228,6 +1236,79 @@ function closeProjectModal() {
   document.body.style.overflow = 'auto';
   currentProject = null;
   isEditMode = false;
+  currentProjectIndex = -1;
+  currentProjectList = [];
+}
+
+// Project Navigation Functions
+function setupProjectNavigation(projectId) {
+  // Get the current filtered project list from the displayed cards
+  const projectCards = document.querySelectorAll('.card[data-project-id]');
+  currentProjectList = Array.from(projectCards).map(card => parseInt(card.dataset.projectId));
+  currentProjectIndex = currentProjectList.indexOf(parseInt(projectId));
+  
+  console.log('Navigation setup:', { currentProjectList, currentProjectIndex, projectId });
+  
+  // Update navigation button states
+  updateNavigationButtons();
+}
+
+function updateNavigationButtons() {
+  const prevBtn = document.getElementById('prevProjectBtn');
+  const nextBtn = document.getElementById('nextProjectBtn');
+  
+  if (prevBtn) {
+    prevBtn.disabled = currentProjectIndex <= 0;
+  }
+  
+  if (nextBtn) {
+    nextBtn.disabled = currentProjectIndex >= currentProjectList.length - 1;
+  }
+}
+
+async function navigateToPreviousProject() {
+  if (currentProjectIndex > 0) {
+    const prevProjectId = currentProjectList[currentProjectIndex - 1];
+    await openProjectModal(prevProjectId);
+  }
+}
+
+async function navigateToNextProject() {
+  if (currentProjectIndex < currentProjectList.length - 1) {
+    const nextProjectId = currentProjectList[currentProjectIndex + 1];
+    await openProjectModal(nextProjectId);
+  }
+}
+
+// Keyboard navigation
+function setupKeyboardNavigation() {
+  document.addEventListener('keydown', function(e) {
+    // Only handle keyboard navigation when modal is open
+    const modal = document.getElementById('projectDetailModal');
+    if (!modal || modal.style.display === 'none') {
+      return;
+    }
+    
+    // Don't handle keyboard events when typing in inputs
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+      return;
+    }
+    
+    switch(e.key) {
+      case 'ArrowLeft':
+        e.preventDefault();
+        navigateToPreviousProject();
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        navigateToNextProject();
+        break;
+      case 'Escape':
+        e.preventDefault();
+        closeProjectModal();
+        break;
+    }
+  });
 }
 
 async function toggleEditMode() {
@@ -2325,3 +2406,5 @@ window.clearEditRating = clearEditRating;
 window.deleteCurrentProject = deleteCurrentProject;
 window.clearModalRating = clearModalRating;
 window.openInstructions = openInstructions;
+window.navigateToPreviousProject = navigateToPreviousProject;
+window.navigateToNextProject = navigateToNextProject;

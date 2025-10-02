@@ -339,7 +339,15 @@
     <div id="projectDetailModal" class="modal-overlay" style="display: none;">
       <div class="modal project-modal">
         <div class="modal-header">
-          <h2 id="modalTitle">Project Details</h2>
+          <div class="modal-navigation">
+            <button class="nav-arrow-btn" id="prevProjectBtn" onclick="navigateToPreviousProject()" title="Previous project (←)">
+              <span>←</span>
+            </button>
+            <h2 id="modalTitle">Project Details</h2>
+            <button class="nav-arrow-btn" id="nextProjectBtn" onclick="navigateToNextProject()" title="Next project (→)">
+              <span>→</span>
+            </button>
+          </div>
           <div class="modal-actions">
             <button class="btn btn-secondary" id="editProjectBtn" onclick="toggleEditMode()">Edit</button>
             <button class="modal-close-btn" onclick="closeProjectModal()">×</button>
