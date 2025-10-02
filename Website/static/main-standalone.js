@@ -1589,9 +1589,13 @@ async function saveProjectChanges() {
       rating: rating || 0,
       tags: tags || null,
       project_link: projectLink || null,
-      video_url: videoUrl || null,
       feedback: feedback || null
     };
+    
+    // Only include video_url if it's provided
+    if (videoUrl) {
+      updatedProject.video_url = videoUrl;
+    }
     
     console.log('Updating project with data:', updatedProject);
     

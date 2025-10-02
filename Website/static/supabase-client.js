@@ -166,7 +166,6 @@ const supabaseAPI = {
       student_name: projectData.student_name,
       description: projectData.description,
       year: projectData.year ? parseInt(projectData.year) : null,
-      video_url: projectData.video_url,
       rating: projectData.rating ? parseInt(projectData.rating) : 0,
       project_link: projectData.project_link,
       curator: projectData.curator,
@@ -175,6 +174,11 @@ const supabaseAPI = {
       documentation: projectData.documentation,
       feedback: projectData.feedback
     };
+    
+    // Only include video_url if it's provided and not null
+    if (projectData.video_url !== undefined) {
+      cleanProjectData.video_url = projectData.video_url;
+    }
     
     // Remove undefined values, but keep null values for clearing fields
     Object.keys(cleanProjectData).forEach(key => {
