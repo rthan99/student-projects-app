@@ -176,9 +176,9 @@ const supabaseAPI = {
       feedback: projectData.feedback
     };
     
-    // Remove undefined/null values
+    // Remove undefined values, but keep null values for clearing fields
     Object.keys(cleanProjectData).forEach(key => {
-      if (cleanProjectData[key] === undefined || cleanProjectData[key] === null) {
+      if (cleanProjectData[key] === undefined) {
         delete cleanProjectData[key];
       }
     });
