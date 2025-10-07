@@ -88,13 +88,37 @@ const supabaseAPI = {
       throw error;
     }
     
+    // Fetch comment counts for all projects
+    const projectIds = data.map(p => p.id);
+    let commentCounts = {};
+    
+    if (projectIds.length > 0) {
+      try {
+        const { data: comments, error: commentsError } = await client
+          .from('comments')
+          .select('project_id')
+          .in('project_id', projectIds);
+        
+        if (!commentsError && comments) {
+          // Count comments per project
+          commentCounts = comments.reduce((acc, comment) => {
+            acc[comment.project_id] = (acc[comment.project_id] || 0) + 1;
+            return acc;
+          }, {});
+        }
+      } catch (err) {
+        console.warn('Error fetching comment counts:', err);
+      }
+    }
+    
     return data.map(project => ({
       ...project,
       // Set counts based on arrays in project table
       image_count: (project.image_urls && Array.isArray(project.image_urls)) ? project.image_urls.length : 0,
       video_count: (project.video_urls && Array.isArray(project.video_urls)) ? project.video_urls.length : 0,
       thumbnail_image: (project.image_urls && project.image_urls.length > 0) ? project.image_urls[0] : null,
-      thumbnail_video: (project.video_urls && project.video_urls.length > 0) ? project.video_urls[0] : null
+      thumbnail_video: (project.video_urls && project.video_urls.length > 0) ? project.video_urls[0] : null,
+      comment_count: commentCounts[project.id] || 0
     }));
   },
 

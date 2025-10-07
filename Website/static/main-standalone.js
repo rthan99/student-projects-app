@@ -249,6 +249,7 @@ function applyFilters(projects) {
   const hasVideo = document.getElementById('filterHasVideo').classList.contains('active');
   const noVideo = document.getElementById('filterNoVideo').classList.contains('active');
   const hasLinks = document.getElementById('filterHasLinks').classList.contains('active');
+  const hasComments = document.getElementById('filterHasComments').classList.contains('active');
   
   // Apply search filter
   if (search) {
@@ -310,6 +311,12 @@ function applyFilters(projects) {
   if (hasLinks) {
     filtered = filtered.filter(project => 
       project.project_link || project.github_repo || project.documentation
+    );
+  }
+  
+  if (hasComments) {
+    filtered = filtered.filter(project => 
+      project.comment_count && project.comment_count > 0
     );
   }
   
@@ -380,6 +387,9 @@ function updateActiveFilters() {
   if (document.getElementById('filterHasLinks').classList.contains('active')) {
     activeFilters.push({ type: 'quick', value: 'has-links', label: 'With Links' });
   }
+  if (document.getElementById('filterHasComments').classList.contains('active')) {
+    activeFilters.push({ type: 'quick', value: 'has-comments', label: 'With Comments' });
+  }
   
   // Update active filters display
   const activeFiltersContainer = document.getElementById('activeFilters');
@@ -407,6 +417,7 @@ function removeActiveFilter(type, value) {
     if (value === 'has-video') document.getElementById('filterHasVideo').classList.remove('active');
     if (value === 'no-video') document.getElementById('filterNoVideo').classList.remove('active');
     if (value === 'has-links') document.getElementById('filterHasLinks').classList.remove('active');
+    if (value === 'has-comments') document.getElementById('filterHasComments').classList.remove('active');
   } else {
     document.getElementById(type).value = '';
   }
@@ -427,6 +438,7 @@ function clearAllFilters() {
   document.getElementById('filterHasVideo').classList.remove('active');
   document.getElementById('filterNoVideo').classList.remove('active');
   document.getElementById('filterHasLinks').classList.remove('active');
+  document.getElementById('filterHasComments').classList.remove('active');
   
   fetchProjects();
 }
@@ -825,6 +837,10 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchProjects();
   });
   document.getElementById('filterHasLinks').addEventListener('click', function() {
+    this.classList.toggle('active');
+    fetchProjects();
+  });
+  document.getElementById('filterHasComments').addEventListener('click', function() {
     this.classList.toggle('active');
     fetchProjects();
   });
