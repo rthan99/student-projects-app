@@ -72,6 +72,20 @@
           <option value="">All Editors</option>
         </select>
         
+        <select id="category" class="filter-select">
+          <option value="">All Categories</option>
+          <option value="Physics">Physics</option>
+          <option value="Chemistry">Chemistry</option>
+          <option value="Biology">Biology</option>
+          <option value="Engineering">Engineering</option>
+          <option value="Technology">Technology</option>
+          <option value="Mathematics">Mathematics</option>
+          <option value="Environment">Environment</option>
+          <option value="Space & Astronomy">Space & Astronomy</option>
+          <option value="Health & Medicine">Health & Medicine</option>
+          <option value="Art & Design">Art & Design</option>
+        </select>
+        
         <select id="rating" class="filter-select">
           <option value="">All Ratings</option>
           <option value="5">5 Stars</option>
@@ -229,7 +243,53 @@
                     <option value="Other (add your name in the comment)">Other (add your name in the comment)</option>
                   </select>
                 </div>
-                
+              </div>
+              
+              <div class="form-group">
+                <label for="new_categories" class="form-label">Categories</label>
+                <div class="categories-multiselect" id="new_categories">
+                  <div class="category-option">
+                    <input type="checkbox" id="cat_physics" value="Physics" class="category-checkbox">
+                    <label for="cat_physics">Physics</label>
+                  </div>
+                  <div class="category-option">
+                    <input type="checkbox" id="cat_chemistry" value="Chemistry" class="category-checkbox">
+                    <label for="cat_chemistry">Chemistry</label>
+                  </div>
+                  <div class="category-option">
+                    <input type="checkbox" id="cat_biology" value="Biology" class="category-checkbox">
+                    <label for="cat_biology">Biology</label>
+                  </div>
+                  <div class="category-option">
+                    <input type="checkbox" id="cat_engineering" value="Engineering" class="category-checkbox">
+                    <label for="cat_engineering">Engineering</label>
+                  </div>
+                  <div class="category-option">
+                    <input type="checkbox" id="cat_technology" value="Technology" class="category-checkbox">
+                    <label for="cat_technology">Technology</label>
+                  </div>
+                  <div class="category-option">
+                    <input type="checkbox" id="cat_mathematics" value="Mathematics" class="category-checkbox">
+                    <label for="cat_mathematics">Mathematics</label>
+                  </div>
+                  <div class="category-option">
+                    <input type="checkbox" id="cat_environment" value="Environment" class="category-checkbox">
+                    <label for="cat_environment">Environment</label>
+                  </div>
+                  <div class="category-option">
+                    <input type="checkbox" id="cat_space" value="Space & Astronomy" class="category-checkbox">
+                    <label for="cat_space">Space & Astronomy</label>
+                  </div>
+                  <div class="category-option">
+                    <input type="checkbox" id="cat_health" value="Health & Medicine" class="category-checkbox">
+                    <label for="cat_health">Health & Medicine</label>
+                  </div>
+                  <div class="category-option">
+                    <input type="checkbox" id="cat_art" value="Art & Design" class="category-checkbox">
+                    <label for="cat_art">Art & Design</label>
+                  </div>
+                </div>
+                <div class="form-hint">Select one or more categories that apply to this project</div>
               </div>
               
               <div class="form-group">
@@ -407,6 +467,11 @@
                     <div id="modalTags" class="tags-display"></div>
                   </div>
                   
+                  <div class="info-section" id="categoriesSection">
+                    <h3>Categories</h3>
+                    <div id="modalCategories" class="categories-display"></div>
+                  </div>
+                  
                   <div class="info-section" id="linksSection">
                     <h3>Links</h3>
                     <div class="links-grid">
@@ -440,6 +505,14 @@
                 <div class="comments-section-full" id="commentsSection">
                   <h3>Comments</h3>
                   <div class="comments-container">
+                    <!-- Comments Display -->
+                    <div class="comments-list" id="commentsList">
+                      <div class="comments-loading" id="commentsLoading">
+                        <div class="loading-spinner"></div>
+                        <span>Loading comments...</span>
+                      </div>
+                    </div>
+                    
                     <!-- Add Comment Form -->
                     <div class="add-comment-form">
                       <div class="comment-form-header">
@@ -491,14 +564,6 @@
                         <div class="form-status" id="comment-status"></div>
                       </form>
                     </div>
-                    
-                    <!-- Comments Display -->
-                    <div class="comments-list" id="commentsList">
-                      <div class="comments-loading" id="commentsLoading">
-                        <div class="loading-spinner"></div>
-                        <span>Loading comments...</span>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -540,6 +605,53 @@
                         <option value="">--- Clear Editor Name ---</option>
                       </select>
                     </div>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="edit_categories" class="form-label">Categories</label>
+                    <div class="categories-multiselect" id="edit_categories">
+                      <div class="category-option">
+                        <input type="checkbox" id="edit_cat_physics" value="Physics" class="edit-category-checkbox">
+                        <label for="edit_cat_physics">Physics</label>
+                      </div>
+                      <div class="category-option">
+                        <input type="checkbox" id="edit_cat_chemistry" value="Chemistry" class="edit-category-checkbox">
+                        <label for="edit_cat_chemistry">Chemistry</label>
+                      </div>
+                      <div class="category-option">
+                        <input type="checkbox" id="edit_cat_biology" value="Biology" class="edit-category-checkbox">
+                        <label for="edit_cat_biology">Biology</label>
+                      </div>
+                      <div class="category-option">
+                        <input type="checkbox" id="edit_cat_engineering" value="Engineering" class="edit-category-checkbox">
+                        <label for="edit_cat_engineering">Engineering</label>
+                      </div>
+                      <div class="category-option">
+                        <input type="checkbox" id="edit_cat_technology" value="Technology" class="edit-category-checkbox">
+                        <label for="edit_cat_technology">Technology</label>
+                      </div>
+                      <div class="category-option">
+                        <input type="checkbox" id="edit_cat_mathematics" value="Mathematics" class="edit-category-checkbox">
+                        <label for="edit_cat_mathematics">Mathematics</label>
+                      </div>
+                      <div class="category-option">
+                        <input type="checkbox" id="edit_cat_environment" value="Environment" class="edit-category-checkbox">
+                        <label for="edit_cat_environment">Environment</label>
+                      </div>
+                      <div class="category-option">
+                        <input type="checkbox" id="edit_cat_space" value="Space & Astronomy" class="edit-category-checkbox">
+                        <label for="edit_cat_space">Space & Astronomy</label>
+                      </div>
+                      <div class="category-option">
+                        <input type="checkbox" id="edit_cat_health" value="Health & Medicine" class="edit-category-checkbox">
+                        <label for="edit_cat_health">Health & Medicine</label>
+                      </div>
+                      <div class="category-option">
+                        <input type="checkbox" id="edit_cat_art" value="Art & Design" class="edit-category-checkbox">
+                        <label for="edit_cat_art">Art & Design</label>
+                      </div>
+                    </div>
+                    <div class="form-hint">Select one or more categories that apply to this project</div>
                   </div>
                 </div>
                 

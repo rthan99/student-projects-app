@@ -157,7 +157,8 @@ const supabaseAPI = {
       documentation: projectData.documentation,
       feedback: projectData.feedback,
       image_urls: projectData.image_urls || [],
-      video_urls: projectData.video_urls || []
+      video_urls: projectData.video_urls || [],
+      categories: Array.isArray(projectData.categories) ? projectData.categories : (projectData.categories ? [projectData.categories] : [])
     };
     
     // Remove undefined/null values
@@ -198,6 +199,11 @@ const supabaseAPI = {
       documentation: projectData.documentation,
       feedback: projectData.feedback
     };
+    
+    // Handle categories array
+    if (projectData.categories !== undefined) {
+      cleanProjectData.categories = Array.isArray(projectData.categories) ? projectData.categories : (projectData.categories ? [projectData.categories] : []);
+    }
     
     // Only include video_url if it's provided and not null
     if (projectData.video_url !== undefined) {

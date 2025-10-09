@@ -240,6 +240,7 @@ function applyFilters(projects) {
   const search = document.getElementById('search').value.trim().toLowerCase();
   const year = document.getElementById('year').value.trim();
   const curator = document.getElementById('curator').value.trim();
+  const category = document.getElementById('category').value.trim();
   const rating = document.getElementById('rating').value.trim();
   const sortBy = document.getElementById('sortBy').value.trim();
   
@@ -269,6 +270,13 @@ function applyFilters(projects) {
   // Apply curator filter
   if (curator) {
     filtered = filtered.filter(project => project.curator === curator);
+  }
+  
+  // Apply category filter
+  if (category) {
+    filtered = filtered.filter(project => 
+      project.categories && Array.isArray(project.categories) && project.categories.includes(category)
+    );
   }
   
   // Apply rating filter
@@ -364,11 +372,13 @@ function updateActiveFilters() {
   const search = document.getElementById('search').value.trim();
   const year = document.getElementById('year').value.trim();
   const curator = document.getElementById('curator').value.trim();
+  const category = document.getElementById('category').value.trim();
   const rating = document.getElementById('rating').value.trim();
   
   if (search) activeFilters.push({ type: 'search', value: search, label: `Search: "${search}"` });
   if (year) activeFilters.push({ type: 'year', value: year, label: `Year: ${year}` });
   if (curator) activeFilters.push({ type: 'curator', value: curator, label: `Editor: ${curator}` });
+  if (category) activeFilters.push({ type: 'category', value: category, label: `Category: ${category}` });
   if (rating) activeFilters.push({ type: 'rating', value: rating, label: `Rating: ${rating}+ stars` });
   
   // Check quick filters
@@ -429,6 +439,7 @@ function clearAllFilters() {
   document.getElementById('search').value = '';
   document.getElementById('year').value = '';
   document.getElementById('curator').value = '';
+  document.getElementById('category').value = '';
   document.getElementById('rating').value = '';
   document.getElementById('sortBy').value = 'title_asc';
   
@@ -486,6 +497,19 @@ function createProjectCard(project) {
   
   const ratingHtml = project.rating ? `<div class="card-rating"><span class="stars">${'★'.repeat(project.rating)}${'☆'.repeat(5-project.rating)}</span></div>` : '';
   
+  // Create categories HTML for card
+  let categoriesHtml = '';
+  if (project.categories && project.categories.length > 0) {
+    const displayCategories = project.categories.slice(0, 2); // Show max 2 categories on card
+    const moreCount = project.categories.length - 2;
+    categoriesHtml = `
+      <div class="card-categories">
+        ${displayCategories.map(cat => `<span class="card-category-badge category-${getCategorySlug(cat)}" onclick="filterByCategory('${escapeHtml(cat)}'); event.stopPropagation();">${escapeHtml(cat)}</span>`).join('')}
+        ${moreCount > 0 ? `<span class="card-category-more">+${moreCount}</span>` : ''}
+      </div>
+    `;
+  }
+  
   return `
     <div class="card" data-project-id="${project.id}" onclick="openProjectModal(${project.id})">
       <div class="card-image">
@@ -494,6 +518,7 @@ function createProjectCard(project) {
       </div>
       <div class="card-content">
         <h3 class="card-title">${escapeHtml(project.title)}</h3>
+        ${categoriesHtml}
         <div class="card-meta">
           ${metadataItems.map(item => `<span>${item}</span>`).join('')}
         </div>
@@ -540,6 +565,36 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+// Get category slug for CSS class
+function getCategorySlug(category) {
+  return category.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and');
+}
+
+// Filter projects by category when category badge is clicked
+function filterByCategory(category) {
+  console.log('Filtering by category:', category);
+  
+  // Set the category filter
+  const categorySelect = document.getElementById('category');
+  if (categorySelect) {
+    categorySelect.value = category;
+  }
+  
+  // Disable random mode if active
+  state.randomMode = false;
+  const randomBtn = document.getElementById('randomProjects');
+  if (randomBtn) {
+    randomBtn.textContent = '🎲 Show me 4 random projects';
+    randomBtn.classList.remove('showing-all');
+  }
+  
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  // Apply filters
+  fetchProjects();
 }
 
 function showRandomProjects() {
@@ -598,6 +653,9 @@ async function createProject(event) {
     const activeStars = document.querySelectorAll('#new_rating .star.active');
     const rating = activeStars.length;
     
+    // Get selected categories
+    const selectedCategories = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb.value);
+    
     // Validate required fields
     if (!title) {
       throw new Error('Project title is required');
@@ -613,7 +671,8 @@ async function createProject(event) {
       project_link: projectLink || null,
       video_url: videoUrl || null,
       feedback: feedback || null,
-      rating: rating
+      rating: rating,
+      categories: selectedCategories
     };
     
     console.log('Creating project with data:', projectData);
@@ -690,6 +749,9 @@ async function createProject(event) {
     // Reset form
     form.reset();
     clearRating();
+    
+    // Clear category checkboxes
+    document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = false);
     
     // Refresh projects list
     await fetchProjects();
@@ -816,6 +878,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('search').addEventListener('input', debounce(fetchProjects, 300));
   document.getElementById('year').addEventListener('change', fetchProjects);
   document.getElementById('curator').addEventListener('change', fetchProjects);
+  document.getElementById('category').addEventListener('change', fetchProjects);
   document.getElementById('rating').addEventListener('change', fetchProjects);
   document.getElementById('sortBy').addEventListener('change', fetchProjects);
   
@@ -1191,6 +1254,18 @@ function populateProjectView(project) {
     tagsSection.style.display = 'none';
   }
   
+  // Populate categories
+  const categoriesSection = document.getElementById('categoriesSection');
+  const categoriesContainer = document.getElementById('modalCategories');
+  if (project.categories && project.categories.length > 0) {
+    categoriesContainer.innerHTML = project.categories.map(cat => 
+      `<span class="category-badge category-${getCategorySlug(cat)}" onclick="filterByCategory('${escapeHtml(cat)}'); closeProjectModal();" style="cursor: pointer;" title="Click to filter by ${escapeHtml(cat)}">${escapeHtml(cat)}</span>`
+    ).join('');
+    if (categoriesSection) categoriesSection.style.display = 'block';
+  } else {
+    if (categoriesSection) categoriesSection.style.display = 'none';
+  }
+  
   // Populate links
   const hasLinks = project.project_link || project.github_repo || project.documentation || project.video_url;
   const linksSection = document.getElementById('linksSection');
@@ -1386,6 +1461,12 @@ async function populateEditForm(project) {
       } else {
         star.classList.remove('active');
       }
+    });
+    
+    // Set categories
+    const categories = project.categories || [];
+    document.querySelectorAll('.edit-category-checkbox').forEach(cb => {
+      cb.checked = categories.includes(cb.value);
     });
     
     // Show current media
@@ -1672,6 +1753,9 @@ async function saveProjectChanges() {
     const activeStars = document.querySelectorAll('#edit_rating .star.active');
     const rating = activeStars.length;
     
+    // Get selected categories
+    const selectedCategories = Array.from(document.querySelectorAll('.edit-category-checkbox:checked')).map(cb => cb.value);
+    
     // Validate required fields
     if (!title) {
       throw new Error('Project title is required');
@@ -1686,7 +1770,8 @@ async function saveProjectChanges() {
       rating: rating || 0,
       tags: tags || null,
       project_link: projectLink || null,
-      feedback: feedback || null
+      feedback: feedback || null,
+      categories: selectedCategories
     };
     
     // Only include video_url if it's provided
@@ -2433,3 +2518,4 @@ window.clearModalRating = clearModalRating;
 window.openInstructions = openInstructions;
 window.navigateToPreviousProject = navigateToPreviousProject;
 window.navigateToNextProject = navigateToNextProject;
+window.filterByCategory = filterByCategory;
