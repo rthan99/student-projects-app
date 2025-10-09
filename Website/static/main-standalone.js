@@ -7,6 +7,7 @@ const state = {
   order: 'asc',
   randomMode: false,
   allProjects: [],
+  commentsViewMode: false,
 };
 
 // Mock API functions for demo mode
@@ -207,16 +208,20 @@ async function fetchProjects() {
     // Store all projects for filter options
     state.allProjects = allProjects;
     
-    if (state.randomMode) {
-      console.log('Showing random projects');
-      showRandomProjects();
+  if (state.randomMode) {
+    console.log('Showing random projects');
+    showRandomProjects();
+  } else {
+    console.log('Showing filtered projects');
+    if (state.commentsViewMode) {
+      displayCommentsView(filteredData);
     } else {
-      console.log('Showing filtered projects');
       displayProjects(filteredData);
     }
-    
-    populateFilterOptions();
-    updateActiveFilters();
+  }
+  
+  populateFilterOptions();
+  updateActiveFilters();
   } catch (error) {
     console.error('Error fetching projects:', error);
     // Show error message to user
@@ -468,6 +473,12 @@ function debounce(func, wait) {
 
 function displayProjects(projects) {
   const container = document.getElementById('projectGrid');
+  const commentsView = document.getElementById('commentsView');
+  
+  // Show grid, hide comments view
+  container.style.display = 'grid';
+  commentsView.style.display = 'none';
+  
   if (!projects || projects.length === 0) {
     container.innerHTML = `
       <div class="no-results">
@@ -480,6 +491,126 @@ function displayProjects(projects) {
   }
 
   container.innerHTML = projects.map(project => createProjectCard(project)).join('');
+}
+
+async function displayCommentsView(projects) {
+  const container = document.getElementById('projectGrid');
+  const commentsView = document.getElementById('commentsView');
+  
+  // Hide grid, show comments view
+  container.style.display = 'none';
+  commentsView.style.display = 'block';
+  
+  if (!projects || projects.length === 0) {
+    commentsView.innerHTML = `
+      <div class="no-results">
+        <div class="no-results-icon">🔍</div>
+        <div class="no-results-text">No projects found</div>
+        <div class="no-results-subtitle">Try adjusting your search or filters</div>
+      </div>
+    `;
+    return;
+  }
+
+  // Show loading state
+  commentsView.innerHTML = `
+    <div class="comments-view-loading">
+      <div class="loading-spinner"></div>
+      <p>Loading comments for ${projects.length} projects...</p>
+    </div>
+  `;
+
+  // Performance tracking
+  const startTime = performance.now();
+
+  // Fetch ALL comments for ALL projects in ONE query - much faster!
+  const projectIds = projects.map(p => p.id);
+  let allComments = [];
+  
+  try {
+    // Fetch all comments at once using direct Supabase query
+    if (window.ENV && window.ENV.SUPABASE_URL) {
+      const supabaseUrl = window.ENV.SUPABASE_URL;
+      const supabaseKey = window.ENV.SUPABASE_ANON_KEY;
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('comments')
+        .select('*')
+        .in('project_id', projectIds)
+        .order('created_at', { ascending: false });
+      
+      if (!error && data) {
+        allComments = data;
+      } else if (error) {
+        console.error('Supabase error:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Error loading comments:', error);
+  }
+  
+  // Group comments by project_id for quick lookup
+  const commentsByProject = {};
+  allComments.forEach(comment => {
+    if (!commentsByProject[comment.project_id]) {
+      commentsByProject[comment.project_id] = [];
+    }
+    commentsByProject[comment.project_id].push(comment);
+  });
+  
+  const loadTime = performance.now() - startTime;
+  console.log(`✅ Loaded ${allComments.length} comments for ${projects.length} projects in ${loadTime.toFixed(0)}ms`);
+
+  // Create HTML for each project with comments
+  let html = '<div class="comments-view-grid">';
+  
+  for (const project of projects) {
+    html += createProjectWithComments(project, commentsByProject[project.id] || []);
+  }
+  
+  html += '</div>';
+  commentsView.innerHTML = html;
+}
+
+function createProjectWithComments(project, comments = []) {
+  const mediaHtml = createMediaHtml(project);
+  const categoriesHtml = project.categories && project.categories.length > 0 
+    ? `<div class="cv-categories">${project.categories.slice(0, 3).map(cat => 
+        `<span class="cv-category-badge category-${getCategorySlug(cat)}">${escapeHtml(cat)}</span>`
+      ).join('')}</div>`
+    : '';
+  
+  const commentsHtml = comments.length > 0
+    ? comments.map(comment => createCommentHTML(comment)).join('')
+    : '<div class="cv-no-comments">No comments yet</div>';
+  
+  return `
+    <div class="cv-project-card" data-project-id="${project.id}">
+      <div class="cv-header" onclick="openProjectModal(${project.id})">
+        <div class="cv-media">
+          ${mediaHtml}
+        </div>
+        <div class="cv-info">
+          <h3 class="cv-title">${escapeHtml(project.title)}</h3>
+          ${categoriesHtml}
+          <div class="cv-meta">
+            ${project.curator ? `<span class="cv-curator">${escapeHtml(project.curator)}</span>` : ''}
+            ${project.year ? `<span class="cv-year">${project.year}</span>` : ''}
+            ${project.rating ? `<span class="cv-rating">${'★'.repeat(project.rating)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div class="cv-comments">
+        <div class="cv-comments-header">
+          <span class="cv-comments-count">${comments.length} ${comments.length === 1 ? 'Comment' : 'Comments'}</span>
+        </div>
+        <div class="cv-comments-list">
+          ${commentsHtml}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function createProjectCard(project) {
@@ -919,6 +1050,24 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       fetchProjects();
     }
+  });
+  
+  // View mode toggle
+  document.getElementById('viewModeToggle').addEventListener('click', function() {
+    state.commentsViewMode = !state.commentsViewMode;
+    
+    if (state.commentsViewMode) {
+      this.querySelector('.icon').textContent = '🏠';
+      this.querySelector('.text').textContent = 'Gallery View';
+      this.classList.add('active');
+    } else {
+      this.querySelector('.icon').textContent = '💬';
+      this.querySelector('.text').textContent = 'Comments View';
+      this.classList.remove('active');
+    }
+    
+    // Refresh display
+    fetchProjects();
   });
   
   // Search on enter
@@ -2424,34 +2573,54 @@ function setupCategoryDescription() {
 // Setup modal rating functionality
 function setupModalRatingHandlers() {
   const ratingElement = document.getElementById('modalRating');
-  if (!ratingElement) return;
+  if (!ratingElement) {
+    console.warn('Modal rating element not found');
+    return;
+  }
   
   const stars = ratingElement.querySelectorAll('.star');
-  
-  // Remove existing event listeners to prevent duplicates
-  stars.forEach(star => {
-    star.removeEventListener('click', handleStarClick);
-    star.addEventListener('click', handleStarClick);
-  });
-  
-  function handleStarClick(event) {
-    const clickedRating = parseInt(event.target.getAttribute('data-rating'));
-    const projectId = ratingElement.getAttribute('data-project-id');
-    
-    if (!projectId) return;
-    
-    // Update visual display
-    stars.forEach((star, index) => {
-      if (index < clickedRating) {
-        star.classList.add('active');
-      } else {
-        star.classList.remove('active');
-      }
-    });
-    
-    // Update project rating in database
-    updateProjectRating(projectId, clickedRating);
+  if (stars.length === 0) {
+    console.warn('No rating stars found');
+    return;
   }
+  
+  console.log('Setting up rating handlers for', stars.length, 'stars');
+  
+  // Add click handlers to each star
+  stars.forEach((star, index) => {
+    // Clone the node to remove old event listeners
+    const newStar = star.cloneNode(true);
+    star.parentNode.replaceChild(newStar, star);
+    
+    // Add new event listener
+    newStar.addEventListener('click', function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const clickedRating = parseInt(this.getAttribute('data-rating'));
+      const projectId = ratingElement.getAttribute('data-project-id');
+      
+      console.log('Star clicked:', clickedRating, 'Project:', projectId);
+      
+      if (!projectId) {
+        console.error('No project ID found');
+        return;
+      }
+      
+      // Update visual display
+      const allStars = ratingElement.querySelectorAll('.star');
+      allStars.forEach((s, i) => {
+        if (i < clickedRating) {
+          s.classList.add('active');
+        } else {
+          s.classList.remove('active');
+        }
+      });
+      
+      // Update project rating in database
+      updateProjectRating(projectId, clickedRating);
+    });
+  });
 }
 
 // Update project rating
@@ -2465,9 +2634,25 @@ async function updateProjectRating(projectId, rating) {
     // Update in database
     await window.supabaseAPI.updateProject(projectId, { rating: rating });
     
-    console.log(`Rating updated to ${rating} stars for project ${projectId}`);
+    console.log(`✅ Rating updated to ${rating} stars for project ${projectId}`);
+    
+    // Show brief success feedback
+    const ratingElement = document.getElementById('modalRating');
+    if (ratingElement) {
+      const originalBg = ratingElement.style.background;
+      ratingElement.style.background = '#d1fae5';
+      ratingElement.style.transition = 'background 0.3s ease';
+      setTimeout(() => {
+        ratingElement.style.background = originalBg;
+      }, 500);
+    }
+    
+    // Refresh the gallery to show updated rating
+    if (typeof fetchProjects === 'function') {
+      fetchProjects();
+    }
   } catch (error) {
-    console.error('Error updating rating:', error);
+    console.error('❌ Error updating rating:', error);
     alert('Failed to update rating. Please try again.');
   }
 }
@@ -2493,9 +2678,22 @@ async function clearModalRating() {
     // Update in database
     await window.supabaseAPI.updateProject(projectId, { rating: 0 });
     
-    console.log(`Rating cleared for project ${projectId}`);
+    console.log(`✅ Rating cleared for project ${projectId}`);
+    
+    // Show brief success feedback
+    const originalBg = ratingElement.style.background;
+    ratingElement.style.background = '#fee2e2';
+    ratingElement.style.transition = 'background 0.3s ease';
+    setTimeout(() => {
+      ratingElement.style.background = originalBg;
+    }, 500);
+    
+    // Refresh the gallery to show updated rating
+    if (typeof fetchProjects === 'function') {
+      fetchProjects();
+    }
   } catch (error) {
-    console.error('Error clearing rating:', error);
+    console.error('❌ Error clearing rating:', error);
     alert('Failed to clear rating. Please try again.');
   }
 }

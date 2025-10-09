@@ -18,6 +18,10 @@
         <section class="controls">
           <div class="controls-top">
             <button id="randomProjects" class="random-btn">🎲 Show me 4 random projects</button>
+            <button id="viewModeToggle" class="view-mode-btn" aria-label="Toggle view mode">
+              <span class="icon">💬</span>
+              <span class="text">Comments View</span>
+            </button>
             <button id="createToggle" class="circle-btn" aria-label="Create a new project">
               <span class="icon">+</span>
             </button>
@@ -135,6 +139,7 @@
 
     <div class="main-content">
       <div id="projectGrid" class="card-grid"></div>
+      <div id="commentsView" class="comments-view" style="display: none;"></div>
     </div>
 
     <!-- Admin Modal -->
